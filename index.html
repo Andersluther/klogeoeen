@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8fd3e6">
+<meta name="description" content="Læringsspil for 0.–6. klasse med baner i matematik, dansk, engelsk, tysk, natur/teknologi, historie og geografi.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Klogeøen">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button{touch-action:manipulation}
+</style>
+<title>Klogeøen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: ø-hub med ét kort pr. fag → banekort (slangevej med 10 baner) → spil. Chunky papirklip-look, bevidst ét lyst tema. */
+:root{
+  --sea:#8fd3e6; --sand:#fbe4a8; --paper:#fffaf0;
+  --ink:#1d2742; --ink-soft:#4a5577;
+  --coral:#ff6a55; --leaf:#2fa65a; --sun:#ffc22e; --grape:#7a5cff; --sky:#3d9bff;
+  --orange:#ff9a3c; --rose:#ff7eb6; --teal:#17b3a3;
+  --space1:#140f3a; --space2:#3b2a86; --lock:#d9d3c2;
+  --good:#2fa65a; --bad:#e8432f;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --r:18px; --shadow:5px 5px 0 var(--ink);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  margin:0; font-family:var(--body); font-weight:800; color:var(--ink);
+  background:
+    radial-gradient(60px 14px at 20% 12%, #ffffff55 50%, transparent 52%),
+    radial-gradient(80px 16px at 75% 40%, #ffffff44 50%, transparent 52%),
+    radial-gradient(70px 14px at 35% 78%, #ffffff44 50%, transparent 52%),
+    var(--sea);
+  background-size:420px 300px, 520px 360px, 460px 340px, auto;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:16px 40px;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:4px solid var(--grape);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.5px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px;width:100%}
+.outline{color:var(--paper);-webkit-text-stroke:1.5px var(--ink);text-shadow:3px 3px 0 var(--ink)}
+
+/* topbar */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.top h1{font-size:clamp(34px,6vw,54px);color:var(--paper);-webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink);line-height:1}
+.chips{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:6px 14px;box-shadow:3px 3px 0 var(--ink);font-size:16px;font-variant-numeric:tabular-nums}
+.chip[hidden]{display:none!important}
+button.chip:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.chip .av{font-size:22px;line-height:1}
+.star{color:var(--sun);-webkit-text-stroke:1px var(--ink)}
+
+/* hub: fag-kort */
+.islands{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px}
+.isle{text-align:left;border:3px solid var(--ink);border-radius:26px;padding:18px;background:var(--c);box-shadow:var(--shadow);display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:center;transition:transform .12s}
+.isle:hover{transform:translate(-2px,-3px) rotate(-.4deg);box-shadow:8px 8px 0 var(--ink)}
+.isle:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.art{width:96px;height:96px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);display:grid;place-items:center;font-size:52px}
+.isle .subj{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;display:inline-block}
+.isle h2{font-size:26px;margin-top:6px}
+.isle p{margin:4px 0 10px;font-weight:700;font-size:15px;line-height:1.35}
+.bar{height:14px;border:3px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sun)}
+.isle .meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-top:6px;font-variant-numeric:tabular-nums}
+.tip{background:var(--paper);border:3px dashed var(--ink);border-radius:var(--r);padding:12px 16px;font-weight:700;font-size:15px;color:var(--ink-soft);margin:0}
+
+/* banekort */
+.mapbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.mapbar h2{font-size:clamp(26px,4.5vw,38px)}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:26px;box-shadow:var(--shadow);padding:18px;position:relative;overflow:hidden}
+.levelbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.lbl{font-size:14px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-soft)}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{border:3px solid var(--ink);background:#fff;border-radius:12px;padding:8px 14px;font-size:16px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sun)}
+.map{margin-top:18px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:26px 8px;padding:18px 6px;border-radius:20px;
+  background:repeating-linear-gradient(0deg,transparent 0 46px,#0000000a 46px 48px),var(--mapc)}
+.node{display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:none;padding:0;position:relative}
+.node .dot{width:min(76px,100%);aspect-ratio:1;max-width:100%;border-radius:50%;border:3px solid var(--ink);background:var(--paper);display:grid;place-items:center;
+  font-family:var(--display);font-size:clamp(20px,4.5vw,30px);box-shadow:3px 3px 0 var(--ink);position:relative}
+.node .ico{position:absolute;top:-10px;right:-6px;font-size:20px;line-height:1}
+.node.done .dot{background:var(--sun)}
+.node.locked .dot{background:var(--lock);color:#9a927c;box-shadow:none;border-style:dashed;font-size:22px}
+.node.locked{cursor:default}
+.node.cur .dot{background:#fff;animation:bob 1.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.node .st{font-size:14px;letter-spacing:1px;min-height:18px}
+.st .off{color:#ffffff99;-webkit-text-stroke:1px var(--ink)}
+.node:not(.locked):hover .dot{transform:translateY(-3px)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:14px;color:var(--ink-soft)}
+
+/* spil */
+.playbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.playbar h2{font-size:clamp(22px,4vw,32px)}
+.stage{min-height:420px}
+.combo{background:var(--sun)}
+.hearts{letter-spacing:2px;font-size:18px}
+
+.timer{height:14px;border:3px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--leaf);width:100%;transform-origin:left}
+
+.quiz{display:flex;flex-direction:column;gap:16px}
+.q-text{font-family:var(--display);font-size:clamp(23px,4.5vw,34px);text-align:center;line-height:1.2;padding:6px 0}
+.q-visual{display:grid;place-items:center}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.opt{border:3px solid var(--ink);border-radius:16px;background:#fff;padding:14px 8px;font-size:clamp(16px,2.6vw,22px);box-shadow:4px 4px 0 var(--ink);min-height:64px}
+.opt:hover:not(:disabled){background:var(--sand)}
+.opt:active:not(:disabled){transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.opt.ok{background:var(--good);color:#fff}
+.opt.no{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.clock{width:min(230px,60vw);height:auto}
+
+.space{position:relative;height:min(62vh,520px);min-height:360px;border-radius:18px;border:3px solid var(--ink);overflow:hidden;touch-action:manipulation;
+  background:radial-gradient(2px 2px at 20% 30%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 70% 20%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 40% 70%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 85% 60%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 10% 85%,#fff 50%,transparent 51%),linear-gradient(var(--space1),var(--space2));
+  background-size:180px 180px,220px 220px,160px 160px,200px 200px,240px 240px,auto}
+.meteor{position:absolute;top:0;left:0;width:84px;height:84px;margin-left:-42px;border-radius:50%;border:3px solid var(--ink);padding:0;
+  background:radial-gradient(circle at 35% 30%,#ffb26b,#e2603a 60%,#9b3420);color:#fff;font-family:var(--display);font-size:26px;
+  -webkit-text-stroke:1px var(--ink);display:grid;place-items:center;box-shadow:0 0 0 4px #ff9d4d55,0 -18px 22px -6px #ffd36a99;will-change:transform}
+.meteor.dud{background:#777;box-shadow:none;opacity:.6;pointer-events:none}
+.meteor.boom{animation:boom .35s forwards;pointer-events:none}
+@keyframes boom{to{transform:var(--t) scale(2);opacity:0}}
+.ground{position:absolute;left:0;right:0;bottom:0;height:86px;background:linear-gradient(#3fbf6a,#2a8f4c);border-top:3px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.problem{font-family:var(--display);font-size:clamp(28px,6vw,44px);background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:2px 18px;box-shadow:4px 4px 0 var(--ink);font-variant-numeric:tabular-nums}
+.flash{position:absolute;inset:0;background:#ff3b2f;opacity:0;pointer-events:none}
+.flash.go{animation:flash .4s}
+@keyframes flash{30%{opacity:.35}}
+.msg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-family:var(--display);font-size:28px;color:#fff;-webkit-text-stroke:1.5px var(--ink);text-align:center;pointer-events:none;width:90%}
+
+.words{display:flex;flex-direction:column;gap:18px;align-items:center}
+.pic{font-size:clamp(70px,14vw,110px);line-height:1}
+.slots,.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.slot,.tile{width:clamp(36px,8.5vw,58px);height:clamp(46px,10vw,66px);border:3px solid var(--ink);border-radius:12px;font-family:var(--display);font-size:clamp(20px,5vw,32px);display:grid;place-items:center;padding:0}
+.slot{background:#fff;border-style:dashed}
+.slot.filled{border-style:solid;background:var(--sand)}
+.tile{background:var(--coral);color:#fff;-webkit-text-stroke:1px var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.tile:disabled{opacity:.2;box-shadow:none;cursor:default}
+.slots.win .slot{background:var(--good);color:#fff}
+.slots.reveal .slot{background:var(--lock)}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.btn{border:3px solid var(--ink);border-radius:14px;background:var(--paper);padding:10px 18px;font-size:17px;box-shadow:3px 3px 0 var(--ink)}
+.btn.main{background:var(--sun)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.shake{animation:shake .4s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.wtimer{width:min(420px,100%)}
+
+.mem{display:grid;gap:10px;grid-template-columns:repeat(4,minmax(0,1fr));max-width:600px;margin:0 auto}
+.card{aspect-ratio:3/4;max-width:100%;border:none;background:none;padding:0;perspective:600px}
+.card .in{position:relative;display:block;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d}
+.card.up .in,.card.done .in{transform:rotateY(180deg)}
+.card .f,.card .b{position:absolute;inset:0;border:3px solid var(--ink);border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;box-shadow:3px 3px 0 var(--ink)}
+.card .f{background:repeating-linear-gradient(45deg,var(--sky) 0 10px,#5aaeff 10px 20px);font-family:var(--display);color:#fff;font-size:30px;-webkit-text-stroke:1px var(--ink)}
+.card .b{background:#fff;transform:rotateY(180deg);font-size:clamp(30px,7vw,48px);padding:4px}
+.card .b.word{font-size:clamp(12px,2.6vw,19px);font-weight:900;word-break:break-word;text-align:center}
+.card.done .b{background:#d8f5e1}
+.memstat{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.tag{background:#fff;border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:14px}
+
+/* historie: tidslinje */
+.tl{display:flex;flex-direction:column;gap:14px}
+.tl .sub{margin:0;text-align:center;color:var(--ink-soft);font-size:15px}
+.tl-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
+.ev{border:3px solid var(--ink);border-radius:14px;background:#fff;padding:10px 12px;box-shadow:3px 3px 0 var(--ink);display:flex;gap:10px;align-items:center;text-align:left;font-size:16px;line-height:1.25}
+.ev .e{font-size:30px;flex:none}
+.ev:hover:not(:disabled){background:var(--sand)}
+.ev:disabled{opacity:.25;box-shadow:none;cursor:default}
+.tl-line{display:flex;flex-direction:column;gap:8px;list-style:none;padding:0;margin:0}
+.tslot{width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;border:3px dashed var(--ink);border-radius:14px;background:#fff;padding:8px 10px;min-height:54px;font-size:16px}
+.tslot .pos{width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--sun);display:grid;place-items:center;font-family:var(--display);font-size:18px}
+.tslot .hint{color:var(--ink-soft);font-weight:700}
+.tslot .yr{font-variant-numeric:tabular-nums;background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:14px;white-space:nowrap}
+.tslot.filled{border-style:solid;background:var(--sand)}
+.tslot.ok{background:#d8f5e1;border-style:solid}
+.tslot.no{background:#ffd9d3;border-style:solid}
+
+/* natur/teknologi: sortering */
+.sorter{display:flex;flex-direction:column;gap:16px;align-items:center}
+.item{display:flex;flex-direction:column;align-items:center;gap:6px;background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:5px 5px 0 var(--ink);padding:16px 26px;min-width:min(240px,100%);font-size:22px;text-align:center}
+.item .e{font-size:clamp(64px,13vw,96px);line-height:1}
+.item .e.txt{font-family:var(--display);font-size:clamp(32px,7vw,52px);font-weight:400;padding:10px 0}
+.item.in{animation:drop .35s ease-out}
+@keyframes drop{from{transform:translateY(-30px) scale(.8);opacity:0}}
+.fb{min-height:24px;margin:0;font-size:17px;text-align:center}
+.bins{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px;width:100%;max-width:640px}
+.bin{border:3px solid var(--ink);border-radius:16px;background:var(--sand);padding:16px 6px;font-size:clamp(15px,2.4vw,19px);box-shadow:4px 4px 0 var(--ink);min-height:80px}
+.bin:active:not(:disabled){transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.bin.ok{background:var(--good);color:#fff}
+.bin.no{background:var(--bad);color:#fff}
+
+/* modal */
+.veil{position:fixed;inset:0;background:#1d2742aa;display:grid;place-items:center;padding:16px;z-index:50}
+.modal{background:var(--paper);border:3px solid var(--ink);border-radius:26px;box-shadow:8px 8px 0 var(--ink);padding:24px;width:min(520px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:16px;text-align:center}
+.modal h2{font-size:34px}
+.bigstars{font-size:58px;letter-spacing:6px;line-height:1}
+.bigstars span{display:inline-block;color:#ddd;-webkit-text-stroke:2px var(--ink)}
+.bigstars span.on{color:var(--sun);animation:pop .5s backwards}
+.bigstars span.on:nth-child(2){animation-delay:.25s}
+.bigstars span.on:nth-child(3){animation-delay:.5s}
+@keyframes pop{0%{transform:scale(0) rotate(-40deg)}70%{transform:scale(1.3)}}
+.newstick{background:var(--sand);border:3px dashed var(--ink);border-radius:16px;padding:10px;font-size:16px}
+.newstick b{font-size:44px;display:block}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:10px}
+.album div{aspect-ratio:1;border:3px solid var(--ink);border-radius:14px;display:grid;place-items:center;font-size:32px;background:#fff}
+.album div.lock{background:var(--lock);color:#8f8770;font-size:16px;border-style:dashed}
+.avs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.avs button{font-size:32px;width:58px;height:58px;border:3px solid var(--ink);border-radius:50%;background:#fff;padding:0}
+.avs button[aria-pressed="true"]{background:var(--sun);transform:scale(1.1)}
+.field{display:flex;flex-direction:column;gap:6px;text-align:left}
+.field input{font:inherit;font-size:20px;border:3px solid var(--ink);border-radius:12px;padding:10px 12px;background:#fff;color:var(--ink)}
+.progress{height:16px;border:3px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--sun)}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:60;width:100%;height:100%}
+
+@media (max-width:520px){
+  .isle{grid-template-columns:70px minmax(0,1fr);padding:14px}
+  .art{width:70px;height:70px;font-size:38px}
+  .meteor{width:66px;height:66px;margin-left:-33px;font-size:20px}
+  .panel{padding:14px}
+  .map{gap:22px 4px;padding:16px 2px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+
+<canvas id="confetti"></canvas>
+<div class="wrap">
+  <header class="top">
+    <h1>Klogeøen</h1>
+    <div class="chips">
+      <button class="chip" id="profileBtn" aria-label="Skift navn og figur"><span class="av" id="avatar">🦊</span><span id="pname">Spiller</span></button>
+      <button class="chip" id="albumBtn" aria-label="Se klistermærker"><span class="star">★</span><span id="starCount">0</span></button>
+      <button class="chip" id="soundBtn" aria-label="Lyd til og fra">🔊 Lyd</button>
+    </div>
+  </header>
+
+  <!-- HUB: ét spil pr. fag -->
+  <main id="hub" class="wrap">
+    <div class="islands" id="islands"></div>
+    <p class="tip">Vælg et fag og dit klassetrin. Hvert fag har forskellige slags spil, og hver bane du klarer, låser den næste op. Bane 10 er mesterbanen. For hver 5. stjerne får du et klistermærke til dit album.</p>
+  </main>
+
+  <!-- BANEKORT -->
+  <section id="mapView" class="wrap" hidden>
+    <div class="mapbar">
+      <button class="chip" id="mapBack">← Til øen</button>
+      <h2 class="outline" id="mapTitle">Fag</h2>
+      <span class="chip" id="mapStars"></span>
+    </div>
+    <div class="panel">
+      <div class="levelbar">
+        <span class="lbl">Klassetrin</span>
+        <div class="seg" id="bands">
+          <button data-b="1">0.–1. klasse</button>
+          <button data-b="2">2.–3. klasse</button>
+          <button data-b="3">4.–6. klasse</button>
+        </div>
+      </div>
+      <div class="map" id="map"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <!-- SPIL -->
+  <section id="play" class="wrap" hidden>
+    <div class="playbar">
+      <button class="chip" id="backBtn">← Banekort</button>
+      <h2 class="outline" id="gameTitle">Spil</h2>
+      <div class="chips">
+        <span class="chip combo" id="combo" hidden>🔥 x<span id="comboN">2</span></span>
+        <span class="chip" id="status" hidden></span>
+        <span class="chip">Point <b id="score">0</b></span>
+      </div>
+    </div>
+    <div class="panel stage" id="stage"></div>
+  </section>
+</div>
+
+<div class="veil" id="veil" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+
+<script>
+(() => {
+/* ================= state ================= */
+const AVATARS = ["🦊","🐼","🐸","🦁","🐯","🐨","🐙","🦄","🐵","🐰"];
+const STICKERS = ["🦄","🐉","🦖","🐙","🦊","🐼","🦁","🐸","🐢","🦉","🦜","🐳","🦈","🐝","🦩","🦔","🦦","🐨","🐯","🐧","🌋","🚀","🛸","🏰","🎸","🏆","💎","👑","🌈","🎃"];
+const LEVELS = 10, KEY = "klogeoeen-v2";
+let S = {name:"", avatar:"🦊", sound:true, band:{}, prog:{}};
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => { const a = arr.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pkey = (s,b,d) => `${s}-${b}-${d}`;
+const starsOf = (s,b,d) => S.prog[pkey(s,b,d)] || 0;
+const unlocked = (s,b,d) => d === 1 || starsOf(s,b,d-1) >= 1;
+const totalStars = () => Object.values(S.prog).reduce((a,b)=>a+b,0);
+const subjStars = (s,b) => { let t=0; for (let d=1; d<=LEVELS; d++) t += starsOf(s,b,d); return t; };
+const cleared = (s,b) => { let n=0; for (let d=1; d<=LEVELS; d++) if (starsOf(s,b,d)) n++; return n; };
+const BANDNAME = {1:"0.–1. klasse", 2:"2.–3. klasse", 3:"4.–6. klasse"};
+
+/* ================= lyd ================= */
+let ac = null;
+function tone(freq, dur=.12, type="sine", when=0, vol=.18){
+  if (!S.sound) return;
+  try {
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t+dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+dur+.02);
+  } catch(e) {}
+}
+const sfx = {
+  ok(){ tone(660,.1,"triangle"); tone(990,.16,"triangle",.09); },
+  bad(){ tone(180,.22,"sawtooth",0,.12); tone(140,.25,"sawtooth",.1,.1); },
+  pop(){ tone(520,.06,"square",0,.08); },
+  boom(){ tone(120,.25,"square",0,.12); tone(880,.1,"triangle",.02); },
+  win(){ [523,659,784,1047].forEach((f,i)=>tone(f,.18,"triangle",i*.12)); },
+};
+function speak(word, lang="en-GB"){
+  if (!S.sound) return;
+  try { const u = new SpeechSynthesisUtterance(word); u.lang = lang; u.rate = .85; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch(e) {}
+}
+
+/* ================= konfetti ================= */
+const cv = $("#confetti"), cx = cv.getContext("2d"); let parts = [], cRun = false;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function confetti(n=120){
+  if (reduced) return;
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ["#ff6a55","#ffc22e","#2fa65a","#3d9bff","#7a5cff","#fffaf0"];
+  for (let i=0;i<n;i++) parts.push({x:innerWidth/2+rnd(-80,80), y:innerHeight*.35, vx:(Math.random()-.5)*14, vy:-Math.random()*14-4, r:rnd(5,10), c:pick(cols), a:Math.random()*6, life:120+rnd(0,60)});
+  if (!cRun){ cRun = true; requestAnimationFrame(cTick); }
+}
+function cTick(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts = parts.filter(p => p.life-- > 0 && p.y < cv.height+20);
+  for (const p of parts){ p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += .2;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.a); cx.fillStyle = p.c; cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2); cx.restore(); }
+  if (parts.length) requestAnimationFrame(cTick); else { cRun = false; cx.clearRect(0,0,cv.width,cv.height); }
+}
+
+/* ================= indhold ================= */
+const WORDS = {
+  1: [["KO","🐄"],["IS","🍦"],["BI","🐝"],["ÆG","🥚"],["KAT","🐱"],["SOL","☀️"],["BIL","🚗"],["MUS","🐭"],["HUS","🏠"],["AND","🦆"],["SKO","👟"],["TOG","🚂"],["ABE","🐒"],["HUND","🐶"],["FISK","🐟"],["BOLD","⚽"],["HEST","🐴"],["GRIS","🐷"],["KAGE","🍰"],["MÅNE","🌙"]],
+  2: [["TRÆ","🌳"],["UGLE","🦉"],["ÆBLE","🍎"],["SKIB","🚢"],["FUGL","🐦"],["PÆRE","🍐"],["LØVE","🦁"],["BANAN","🍌"],["KANIN","🐰"],["ROBOT","🤖"],["TIGER","🐯"],["BJØRN","🐻"],["BLOMST","🌸"],["SLANGE","🐍"],["TROMME","🥁"],["GUITAR","🎸"],["HJERTE","❤️"],["STJERNE","⭐"],["PAPEGØJE","🦜"],["SKILDPADDE","🐢"]],
+  3: [["GIRAF","🦒"],["CYKEL","🚲"],["RAKET","🚀"],["ANANAS","🍍"],["VULKAN","🌋"],["ELEFANT","🐘"],["PINGVIN","🐧"],["JORDBÆR","🍓"],["REGNBUE","🌈"],["SNEMAND","⛄"],["PARAPLY","☂️"],["KÆNGURU","🦘"],["TRAKTOR","🚜"],["FLAMINGO","🦩"],["BRANDBIL","🚒"],["DINOSAUR","🦖"],["TELESKOP","🔭"],["MIKROSKOP","🔬"],["JORDKLODE","🌍"],["SOMMERFUGL","🦋"],["KROKODILLE","🐊"],["HELIKOPTER","🚁"],["BLÆKSPRUTTE","🐙"]],
+};
+const ENG = {
+  1: [["cat","🐱"],["dog","🐶"],["sun","☀️"],["car","🚗"],["apple","🍎"],["fish","🐟"],["ball","⚽"],["house","🏠"],["cow","🐄"],["bird","🐦"],["star","⭐"],["tree","🌳"],["egg","🥚"],["bee","🐝"],["hat","🎩"],["book","📖"]],
+  2: [["horse","🐴"],["banana","🍌"],["train","🚂"],["flower","🌸"],["moon","🌙"],["pig","🐷"],["cake","🍰"],["ship","🚢"],["rabbit","🐰"],["frog","🐸"],["duck","🦆"],["milk","🥛"],["bear","🐻"],["lion","🦁"],["snake","🐍"],["pear","🍐"]],
+  3: [["elephant","🐘"],["giraffe","🦒"],["penguin","🐧"],["strawberry","🍓"],["bicycle","🚲"],["rocket","🚀"],["volcano","🌋"],["rainbow","🌈"],["butterfly","🦋"],["crocodile","🐊"],["snowman","⛄"],["helicopter","🚁"],["umbrella","☂️"],["pineapple","🍍"],["kangaroo","🦘"],["telescope","🔭"]],
+};
+// [spørgsmål, rigtigt svar, forkerte svar...]
+const QUIZ = {
+  1: [
+    ["Hvilket dyr siger „muh“?","Ko","Gris","Hund","And"],
+    ["Hvor mange ben har en edderkop?","8","6","4","10"],
+    ["Hvilken farve får du, når du blander blå og gul?","Grøn","Lilla","Orange","Brun"],
+    ["Hvilken årstid kommer efter vinter?","Forår","Sommer","Efterår","Jul"],
+    ["Hvad hedder Danmarks hovedstad?","København","Aarhus","Odense","Aalborg"],
+    ["Hvor mange dage er der i en uge?","7","5","10","12"],
+    ["Hvad laver bier?","Honning","Mælk","Brød","Saft"],
+    ["Hvor mange hjul har en cykel?","2","3","4","1"],
+    ["Hvilken figur har 3 hjørner?","Trekant","Firkant","Cirkel","Stjerne"],
+    ["Hvad kalder man en baby-hund?","Hvalp","Kalv","Kylling","Føl"],
+    ["Hvilken farve har en moden banan?","Gul","Blå","Rød","Lilla"],
+    ["Hvad har en fisk i stedet for ben?","Finner","Vinger","Hove","Kløer"],
+    ["Hvilket dyr har en snabel?","Elefant","Giraf","Løve","Zebra"],
+    ["Hvad skal en plante bruge for at gro?","Vand og lys","Kun sten","Slik","Mælk"],
+    ["Hvor mange fingre har du på én hånd?","5","4","6","10"],
+    ["Hvilket dyr lægger æg?","Høne","Ko","Hund","Kat"],
+    ["Hvilken årstid er koldest?","Vinter","Sommer","Forår","Efterår"],
+    ["Hvad kalder man en baby-ko?","Kalv","Hvalp","Føl","Lam"],
+  ],
+  2: [
+    ["Hvilken planet er nærmest Solen?","Merkur","Venus","Mars","Jorden"],
+    ["Hvad hedder Norges hovedstad?","Oslo","Bergen","Stockholm","Helsinki"],
+    ["Hvad hedder Sveriges hovedstad?","Stockholm","Göteborg","Oslo","Malmö"],
+    ["Hvad hedder Tysklands hovedstad?","Berlin","München","Wien","Hamborg"],
+    ["Hvor mange måneder er der på et år?","12","10","11","13"],
+    ["Hvad hedder havet vest for Jylland?","Nordsøen","Østersøen","Middelhavet","Det Døde Hav"],
+    ["Hvad bliver vand til, når det fryser?","Is","Damp","Sand","Salt"],
+    ["Hvilket dyr er verdens største?","Blåhval","Elefant","Giraf","Hvidhaj"],
+    ["Hvor mange ben har et insekt?","6","8","4","10"],
+    ["I hvilken by blev H.C. Andersen født?","Odense","København","Skagen","Ribe"],
+    ["Hvilke farver har Dannebrog?","Rød og hvid","Blå og gul","Rød og gul","Grøn og hvid"],
+    ["Hvad hedder den største planet i solsystemet?","Jupiter","Saturn","Jorden","Neptun"],
+    ["Hvilken dag kommer efter onsdag?","Torsdag","Tirsdag","Fredag","Mandag"],
+    ["Hvad kalder man et dyr, der kun spiser planter?","Planteæder","Rovdyr","Altæder","Insekt"],
+    ["Hvad hedder Danmarks længste å?","Gudenå","Skjern Å","Storå","Limfjorden"],
+    ["Hvilken fugl er Danmarks nationalfugl?","Svane","Stork","Ørn","Due"],
+    ["Hvor mange dage har februar i et skudår?","29","28","30","31"],
+    ["Hvad er Jorden for en slags himmellegeme?","En planet","En stjerne","En måne","En komet"],
+  ],
+  3: [
+    ["Hvad hedder Frankrigs hovedstad?","Paris","Lyon","Bruxelles","Madrid"],
+    ["Hvad hedder Spaniens hovedstad?","Madrid","Barcelona","Lissabon","Rom"],
+    ["Hvad hedder Italiens hovedstad?","Rom","Milano","Napoli","Venedig"],
+    ["Hvad hedder Polens hovedstad?","Warszawa","Kraków","Prag","Budapest"],
+    ["Hvad hedder Islands hovedstad?","Reykjavík","Nuuk","Tórshavn","Oslo"],
+    ["Hvad hedder Grønlands hovedstad?","Nuuk","Ilulissat","Tórshavn","Reykjavík"],
+    ["Hvilken gas optager planter fra luften i fotosyntesen?","Kuldioxid","Ilt","Helium","Brint"],
+    ["Ved hvor mange grader koger vand ved havets overflade?","100 °C","50 °C","80 °C","212 °C"],
+    ["Hvilket organ pumper blodet rundt i kroppen?","Hjertet","Lungerne","Leveren","Maven"],
+    ["Hvad hedder verdens højeste bjerg?","Mount Everest","Mont Blanc","Kilimanjaro","K2"],
+    ["Hvem malede Mona Lisa?","Leonardo da Vinci","Picasso","Van Gogh","Michelangelo"],
+    ["Hvilket år fik Danmark sin første grundlov?","1849","1945","1660","1901"],
+    ["Hvilken planet kaldes den røde planet?","Mars","Venus","Jupiter","Merkur"],
+    ["Hvilket sprog taler man i Brasilien?","Portugisisk","Spansk","Brasiliansk","Fransk"],
+    ["Hvad er H₂O?","Vand","Ilt","Salt","Brint"],
+    ["Hvor mange planeter er der i vores solsystem?","8","7","9","12"],
+    ["Hvad hedder verdens største ocean?","Stillehavet","Atlanterhavet","Det Indiske Ocean","Ishavet"],
+    ["Hvilket af dyrene er et pattedyr?","Delfin","Haj","Krokodille","Pingvin"],
+  ],
+};
+
+const DEU = {
+  1: [["Hund","🐶"],["Katze","🐱"],["Sonne","☀️"],["Auto","🚗"],["Apfel","🍎"],["Fisch","🐟"],["Ball","⚽"],["Haus","🏠"],["Kuh","🐄"],["Vogel","🐦"],["Stern","⭐"],["Baum","🌳"],["Ei","🥚"],["Biene","🐝"],["Hut","🎩"],["Buch","📖"]],
+  2: [["Pferd","🐴"],["Banane","🍌"],["Zug","🚂"],["Blume","🌸"],["Mond","🌙"],["Schwein","🐷"],["Kuchen","🍰"],["Schiff","🚢"],["Kaninchen","🐰"],["Frosch","🐸"],["Ente","🦆"],["Milch","🥛"],["Bär","🐻"],["Löwe","🦁"],["Schlange","🐍"],["Birne","🍐"]],
+  3: [["Elefant","🐘"],["Giraffe","🦒"],["Pinguin","🐧"],["Erdbeere","🍓"],["Fahrrad","🚲"],["Rakete","🚀"],["Vulkan","🌋"],["Regenbogen","🌈"],["Schmetterling","🦋"],["Krokodil","🐊"],["Schneemann","⛄"],["Hubschrauber","🚁"],["Regenschirm","☂️"],["Ananas","🍍"],["Känguru","🦘"],["Teleskop","🔭"]],
+};
+// [begivenhed, emoji, sorteringsår, tekst der vises bagefter]
+const HIST = {
+  1: [
+    ["Dinosaurerne lever på Jorden","🦖",-66000000,"for over 66 mio. år siden"],
+    ["Stenalderfolk jager med stenøkser i Danmark","🏹",-10000,"for ca. 12.000 år siden"],
+    ["Vikingerne sejler ud på togter","⛵",800,"ca. år 800"],
+    ["Riddere bor på borge","🏰",1300,"ca. år 1100–1500"],
+    ["Det første tog kører i Danmark","🚂",1847,"år 1847"],
+    ["De første biler bliver bygget","🚗",1886,"år 1886"],
+    ["Danmark får fjernsyn","📺",1951,"år 1951"],
+    ["Mennesker lander på Månen","🌕",1969,"år 1969"],
+    ["Smartphonen kommer","📱",2007,"år 2007"],
+  ],
+  2: [
+    ["Guldhornene bliver lavet","📯",400,"ca. år 400"],
+    ["Harald Blåtand rejser den store Jellingsten","🪨",965,"ca. 965"],
+    ["Absalon bygger en borg, hvor København ligger i dag","🏰",1167,"1167"],
+    ["Sagnet siger, at Dannebrog falder ned fra himlen","🚩",1219,"1219"],
+    ["Christian 4. bygger Rundetårn","🔭",1642,"færdig 1642"],
+    ["H.C. Andersen bliver født i Odense","✒️",1805,"1805"],
+    ["Den første jernbane i Danmark: København–Roskilde","🚂",1847,"1847"],
+    ["Danmark får sin første grundlov","📜",1849,"1849"],
+    ["LEGO begynder i Billund","🧱",1932,"1932"],
+    ["Danmark bliver besat af Tyskland","🪖",1940,"1940"],
+    ["Margrethe 2. bliver dronning","👑",1972,"1972"],
+    ["Storebæltsbroen åbner for biler","🌉",1998,"1998"],
+    ["Frederik 10. bliver konge","🤴",2024,"2024"],
+  ],
+  3: [
+    ["Den store pyramide i Giza bliver bygget","🔺",-2560,"ca. 2560 f.Kr."],
+    ["De første olympiske lege i oldtidens Grækenland","🏛️",-776,"776 f.Kr."],
+    ["Julius Cæsar bliver dræbt i Rom","🗡️",-44,"44 f.Kr."],
+    ["Vikinger angriber klosteret Lindisfarne i England","⛵",793,"793"],
+    ["Gutenberg trykker bøger med løse typer","📚",1450,"ca. 1450"],
+    ["Columbus når frem til Amerika","🧭",1492,"1492"],
+    ["Reformationen i Danmark","⛪",1536,"1536"],
+    ["Den Franske Revolution begynder","⚔️",1789,"1789"],
+    ["Brødrene Wright flyver for første gang","✈️",1903,"1903"],
+    ["Første verdenskrig begynder","🎖️",1914,"1914"],
+    ["Anden verdenskrig slutter","🕊️",1945,"1945"],
+    ["Mennesker lander på Månen","🌕",1969,"1969"],
+    ["Berlinmuren falder","🧱",1989,"1989"],
+    ["Den første hjemmeside går online","🌐",1991,"1991"],
+  ],
+};
+// sorteringsopgaver: titel, kasser, [navn, emoji, rigtig kasse]
+const SORT = {
+  1: [
+    {t:"Kan dyret flyve?", bins:["Kan flyve","Kan ikke flyve"], items:[["Ugle","🦉",0],["Sommerfugl","🦋",0],["Flagermus","🦇",0],["Bi","🐝",0],["Ørn","🦅",0],["Hest","🐴",1],["Snegl","🐌",1],["Fisk","🐟",1],["Pingvin","🐧",1],["Ko","🐄",1]]},
+    {t:"Hvor bor dyret?", bins:["I vandet","På land"], items:[["Fisk","🐟",0],["Hval","🐳",0],["Krabbe","🦀",0],["Blæksprutte","🐙",0],["Delfin","🐬",0],["Ko","🐄",1],["Løve","🦁",1],["Hest","🐴",1],["Myre","🐜",1],["Kanin","🐰",1]]},
+    {t:"Frugt eller grøntsag?", bins:["Frugt","Grøntsag"], items:[["Æble","🍎",0],["Banan","🍌",0],["Pære","🍐",0],["Jordbær","🍓",0],["Vindruer","🍇",0],["Gulerod","🥕",1],["Broccoli","🥦",1],["Kartoffel","🥔",1],["Salat","🥬",1],["Løg","🧅",1]]},
+  ],
+  2: [
+    {t:"Hvilken dyregruppe?", bins:["Pattedyr","Fugl","Fisk"], items:[["Hund","🐶",0],["Hval","🐳",0],["Flagermus","🦇",0],["Ko","🐄",0],["Ugle","🦉",1],["Pingvin","🐧",1],["Høne","🐔",1],["Papegøje","🦜",1],["Haj","🦈",2],["Klovnefisk","🐠",2],["Torsk","🐟",2],["Kuglefisk","🐡",2]]},
+    {t:"Hvad spiser dyret?", bins:["Planteæder","Rovdyr"], items:[["Ko","🐄",0],["Kanin","🐰",0],["Giraf","🦒",0],["Elefant","🐘",0],["Hest","🐴",0],["Løve","🦁",1],["Ulv","🐺",1],["Haj","🦈",1],["Ørn","🦅",1],["Tiger","🐯",1]]},
+    {t:"Bliver den hængende på en magnet?", bins:["Ja","Nej"], items:[["Papirclips","📎",0],["Skrue af jern","🔩",0],["Kæde af jern","⛓️",0],["Træklods","🪵",1],["Bamse","🧸",1],["Blyant","✏️",1],["Dåse af aluminium","🥫",1],["Ballon","🎈",1]]},
+  ],
+  3: [
+    {t:"Fast stof, væske eller gas?", bins:["Fast stof","Væske","Gas"], items:[["Is","🧊",0],["Sten","🪨",0],["Træ","🪵",0],["Mønt","🪙",0],["Vand","💧",1],["Mælk","🥛",1],["Olie","🛢️",1],["Juice","🧃",1],["Vanddamp","♨️",2],["Luften i en ballon","🎈",2],["Boblerne i sodavand","🫧",2]]},
+    {t:"Hvilken slags energikilde?", bins:["Vedvarende","Ikke vedvarende"], items:[["Vind","🌬️",0],["Sol","☀️",0],["Vandkraft","🌊",0],["Halm og træflis","🌾",0],["Kul","🪨",1],["Olie","🛢️",1],["Naturgas","🔥",1],["Benzin","⛽",1]]},
+    {t:"Leder det strøm?", bins:["Leder strøm","Leder ikke strøm"], items:[["Mønt af metal","🪙",0],["Nøgle af metal","🔑",0],["Ske af metal","🥄",0],["Skrue af jern","🔩",0],["Ballon af gummi","🎈",1],["Træpind","🪵",1],["Plastiklineal","📏",1],["Drikkeglas","🥛",1],["Uldsok","🧦",1]]},
+  ],
+};
+
+/* ---------- ekstra indhold til de nye spiltyper ---------- */
+// rækkefølger i naturen: [tekst, emoji] i rigtig rækkefølge
+const NATSEQ = {
+  1: [
+    {t:"Hvordan vokser en blomst?", items:[["Frøet kommer i jorden","🌰"],["Der kommer en spire","🌱"],["Planten får blade","🌿"],["Blomsten springer ud","🌻"]]},
+    {t:"Fra æg til høne", items:[["Ægget bliver lagt","🥚"],["Kyllingen klækker","🐣"],["Lille kylling","🐥"],["Voksen høne","🐔"]]},
+    {t:"Fra mindst til størst", first:"Mindst", last:"Størst", items:[["Myre","🐜"],["Mus","🐭"],["Kat","🐱"],["Hest","🐴"],["Elefant","🐘"],["Blåhval","🐳"]]},
+    {t:"Sådan går en dag", items:[["Solen står op","🌅"],["Frokost ved middagstid","🥪"],["Solen går ned","🌇"],["Nat med stjerner","🌙"]]},
+  ],
+  2: [
+    {t:"Sommerfuglens liv", items:[["Æg på et blad","🥚"],["Larve","🐛"],["Puppe",""],["Sommerfugl","🦋"]]},
+    {t:"Fra frøæg til frø", items:[["Frøæg i vandet","🫧"],["Haletudse",""],["Haletudse med ben",""],["Frø","🐸"]]},
+    {t:"Planeterne fra Solen og ud", first:"Nærmest Solen", last:"Længst væk", items:[["Merkur",""],["Venus",""],["Jorden","🌍"],["Mars",""],["Jupiter",""],["Saturn","🪐"],["Uranus",""],["Neptun",""]]},
+    {t:"Fra mindst til størst", first:"Mindst", last:"Størst", items:[["Myre","🐜"],["Mus","🐭"],["Kat","🐱"],["Hest","🐴"],["Elefant","🐘"],["Blåhval","🐳"]]},
+  ],
+  3: [
+    {t:"Fra mindst til størst", first:"Mindst", last:"Størst", items:[["Atom","⚛️"],["Celle","🦠"],["Myre","🐜"],["Menneske","🧍"],["Jorden","🌍"],["Solen","☀️"]]},
+    {t:"Maden gennem kroppen", items:[["Munden","👄"],["Spiserøret",""],["Mavesækken",""],["Tyndtarmen",""],["Tyktarmen",""]]},
+    {t:"Planeterne fra Solen og ud", first:"Nærmest Solen", last:"Længst væk", items:[["Merkur",""],["Venus",""],["Jorden","🌍"],["Mars",""],["Jupiter",""],["Saturn","🪐"],["Uranus",""],["Neptun",""]]},
+    {t:"Fra korn til brød", items:[["Kornet bliver sået","🌱"],["Kornet bliver høstet","🌾"],["Kornet bliver malet til mel",""],["Brødet bliver bagt","🍞"]]},
+  ],
+};
+const NATMEM = {
+  1: [["🐄 Ko","Kalv"],["🐶 Hund","Hvalp"],["🐴 Hest","Føl"],["🐑 Får","Lam"],["🐔 Høne","Kylling"],["🐷 Gris","Pattegris"],["🐱 Kat","Killing"],["🐸 Frø","Haletudse"]],
+  3: [["❤️ Hjertet","Pumper blodet rundt"],["🫁 Lungerne","Optager ilt"],["🧠 Hjernen","Styrer kroppen"],["👀 Øjnene","Ser"],["👂 Ørerne","Hører"],["👃 Næsen","Lugter"],["🦴 Knoglerne","Holder kroppen oppe"],["🦷 Tænderne","Tygger maden"],["Mavesækken","Fordøjer maden"]],
+};
+NATMEM[2] = NATMEM[1];
+const RIM = {
+  1: [["KAT","HAT"],["MUS","HUS"],["SOL","STOL"],["BIL","PIL"],["FISK","DISK"],["KO","SKO"],["IS","GRIS"],["HUND","MUND"]],
+  2: [["STEN","BEN"],["SKY","BY"],["MÅNE","LÅNE"],["SKOLE","STOLE"],["HEST","FEST"],["TRÆ","KNÆ"],["KAGE","BAGE"],["HÅND","BÅND"]],
+  3: [["glad","fro"],["hurtig","hastig"],["begynde","starte"],["kigge","se"],["smuk","køn"],["vred","sur"],["tale","snakke"],["stor","enorm"],["ende","slutte"]],
+};
+const DANSORT = {
+  1: [
+    {t:"Vokal eller konsonant?", bins:["Vokal","Konsonant"], items:[..."AEIOUYÆØÅ"].map(c=>["",c,0]).concat([..."BDFGHKLMNPRSTV"].map(c=>["",c,1]))},
+    {t:"Stort eller lille bogstav?", bins:["Stort","Lille"], items:[..."ABDEGHKMRT"].map(c=>["",c,0]).concat([..."abdeghkmrt"].map(c=>["",c,1]))},
+  ],
+  2: [
+    {t:"Hvilken ordklasse?", bins:["Navneord","Udsagnsord","Tillægsord"], items:[["hund","",0],["bord","",0],["skole","",0],["bil","",0],["bog","",0],["løbe","",1],["spise","",1],["synge","",1],["hoppe","",1],["læse","",1],["glad","",2],["rød","",2],["stor","",2],["hurtig","",2],["sjov","",2]]},
+    {t:"Ental eller flertal?", bins:["Ental","Flertal"], items:[["hund","",0],["bil","",0],["bog","",0],["barn","",0],["fod","",0],["mand","",0],["katte","",1],["huse","",1],["æbler","",1],["børn","",1],["fødder","",1],["mænd","",1]]},
+  ],
+  3: [
+    {t:"Hvilken ordklasse?", bins:["Navneord","Udsagnsord","Tillægsord"], items:[["glæde","",0],["skov","",0],["minut","",0],["computer","",0],["ø","",0],["undersøge","",1],["forklare","",1],["tænke","",1],["svømme","",1],["glemme","",1],["modig","",2],["sjælden","",2],["nysgerrig","",2],["farlig","",2],["venlig","",2]]},
+    {t:"Hedder det en eller et?", bins:["en","et"], items:[["bil","🚗",0],["stol","🪑",0],["hund","🐶",0],["bog","📖",0],["pige","👧",0],["skole","🏫",0],["hus","🏠",1],["bord","",1],["æble","🍎",1],["barn","👶",1],["tog","🚂",1],["vindue","🪟",1],["træ","🌳",1],["æg","🥚",1]]},
+  ],
+};
+const HISQ = {
+  1: [
+    ["Hvad hed vikingernes tordengud?","Thor","Odin","Loke","Zeus"],
+    ["Hvad sejlede vikingerne i?","Langskibe","Ubåde","Containerskibe","Motorbåde"],
+    ["Hvem boede på borge i middelalderen?","Konger og riddere","Dinosaurer","Astronauter","Cowboys"],
+    ["Hvad lavede stenalderfolk redskaber af?","Flint","Plastik","Jern","Guld"],
+    ["Hvem er Danmarks konge i dag?","Frederik 10.","Christian 4.","Harald Blåtand","Gorm den Gamle"],
+    ["Hvad kørte man i, før der var biler?","Hestevogn","Rumskib","Elløbehjul","Bus"],
+    ["Hvilket dyr levede i Danmark efter istiden?","Rensdyr","Kænguru","Giraf","Pingvin"],
+    ["Hvad skrev vikingerne med?","Runer","Kuglepen","Computer","Skrivemaskine"],
+  ],
+  2: [
+    ["Hvilken konge rejste den store Jellingsten?","Harald Blåtand","Christian 4.","Frederik 10.","Absalon"],
+    ["Hvad kaldes den store Jellingsten ofte?","Danmarks dåbsattest","Danmarks pas","Kongens sten","Vikingernes bog"],
+    ["Hvilken konge byggede Rundetårn?","Christian 4.","Harald Blåtand","Frederik 9.","Valdemar Sejr"],
+    ["Hvem skrev eventyret om Den grimme ælling?","H.C. Andersen","Brødrene Grimm","Astrid Lindgren","Karen Blixen"],
+    ["Hvilket år blev Danmark befriet efter 2. verdenskrig?","1945","1940","1918","1989"],
+    ["Hvem grundlagde LEGO?","Ole Kirk Christiansen","H.C. Andersen","Christian 4.","Niels Bohr"],
+    ["I hvilken by bliver danske konger og dronninger begravet i domkirken?","Roskilde","Odense","Aarhus","Ribe"],
+    ["Hvad hed Harald Blåtands far?","Gorm den Gamle","Knud den Store","Svend Tveskæg","Erik Klipping"],
+  ],
+  3: [
+    ["Hvem sejlede over Atlanterhavet til Amerika i 1492?","Columbus","Magellan","Marco Polo","James Cook"],
+    ["Hvilket år fik kvinder stemmeret til Folketinget i Danmark?","1915","1849","1945","1971"],
+    ["Hvilken by blev begravet, da vulkanen Vesuv gik i udbrud år 79?","Pompeji","Rom","Athen","Venedig"],
+    ["Hvad hed skibet, der sank efter at have ramt et isbjerg i 1912?","Titanic","Mayflower","Santa Maria","Jylland"],
+    ["Hvilket land gav Frihedsgudinden til USA?","Frankrig","England","Spanien","Holland"],
+    ["Hvilket år faldt Berlinmuren?","1989","1945","1961","2001"],
+    ["Hvem var det første menneske, der gik på Månen?","Neil Armstrong","Juri Gagarin","Buzz Aldrin","Elon Musk"],
+    ["Hvilken konge indførte enevælden i Danmark i 1660?","Frederik 3.","Christian 4.","Frederik 7.","Christian 10."],
+    ["Hvilket land blev Danmark besat af under 2. verdenskrig?","Tyskland","Sverige","England","Rusland"],
+  ],
+};
+const HISMEM = {
+  1: [["🦖","Dinosaur"],["⛵","Vikingeskib"],["🏰","Borg"],["🛡️","Skjold"],["⚔️","Sværd"],["👑","Krone"],["🏹","Bue og pil"],["🪓","Økse"]],
+  2: [["H.C. Andersen","Den grimme ælling"],["Christian 4.","Rundetårn"],["Harald Blåtand","Jellingstenen"],["Absalon","København"],["Ole Kirk Christiansen","LEGO"],["Thor","Tordenguden"],["Gorm den Gamle","Konge i Jelling"],["Margrethe 2.","Dronning 1972–2024"]],
+  3: [["Columbus","Amerika 1492"],["Gutenberg","Bogtryk"],["Neil Armstrong","Månen 1969"],["Julius Cæsar","Romerriget"],["Leonardo da Vinci","Mona Lisa"],["Martin Luther","Reformationen"],["Brødrene Wright","Det første fly"],["Kleopatra","Egypten"]],
+};
+const GEOMEM = {
+  1: [["🐪","Ørken"],["🐒","Regnskov"],["🐧","Sydpolen"],["🦁","Savanne"],["🐟","Havet"],["🐄","Bondegård"],["🐿️","Skov"],["🦀","Strand"]],
+  2: [["Norge","Oslo"],["Sverige","Stockholm"],["Finland","Helsinki"],["Island","Reykjavík"],["Tyskland","Berlin"],["Grønland","Nuuk"],["Færøerne","Tórshavn"],["Polen","Warszawa"]],
+  3: [["Frankrig","Paris"],["Spanien","Madrid"],["Italien","Rom"],["Portugal","Lissabon"],["Grækenland","Athen"],["Holland","Amsterdam"],["Østrig","Wien"],["Belgien","Bruxelles"],["Storbritannien","London"],["Irland","Dublin"]],
+};
+const GEOSORT = {
+  1: [
+    {t:"Lever dyret vildt i Danmark?", bins:["Ja","Nej"], items:[["Ræv","🦊",0],["Egern","🐿️",0],["Pindsvin","🦔",0],["Rådyr","🦌",0],["Sæl","🦭",0],["Løve","🦁",1],["Giraf","🦒",1],["Pingvin","🐧",1],["Kænguru","🦘",1],["Elefant","🐘",1]]},
+    {t:"Varmt eller koldt?", bins:["Varmt","Koldt"], items:[["Sol","☀️",0],["Bål","🔥",0],["Ørken","🏜️",0],["Varm kakao","☕",0],["Sommerdag på stranden","🏖️",0],["Is","🧊",1],["Snemand","⛄",1],["Sne","❄️",1],["Sydpolen","🐧",1]]},
+  ],
+  2: [
+    {t:"Hvor ligger byen?", bins:["Jylland","Fyn","Sjælland"], items:[["Aarhus","",0],["Aalborg","",0],["Esbjerg","",0],["Vejle","",0],["Odense","",1],["Svendborg","",1],["Nyborg","",1],["Middelfart","",1],["København","",2],["Roskilde","",2],["Helsingør","",2],["Holbæk","",2]]},
+    {t:"Ligger landet i Norden?", bins:["I Norden","Ikke i Norden"], items:[["Danmark","",0],["Norge","",0],["Sverige","",0],["Finland","",0],["Island","",0],["Tyskland","",1],["Spanien","",1],["Italien","",1],["Frankrig","",1],["Polen","",1]]},
+  ],
+  3: [
+    {t:"Hvilken verdensdel?", bins:["Europa","Asien","Afrika","Amerika"], items:[["Frankrig","",0],["Polen","",0],["Spanien","",0],["Kina","",1],["Japan","",1],["Indien","",1],["Egypten","",2],["Kenya","",2],["Nigeria","",2],["USA","",3],["Brasilien","",3],["Mexico","",3]]},
+    {t:"Nordlige eller sydlige halvkugle?", bins:["Nordlige","Sydlige"], items:[["Danmark","",0],["Canada","",0],["Japan","",0],["Egypten","",0],["Mexico","",0],["Australien","",1],["Argentina","",1],["Sydafrika","",1],["New Zealand","",1],["Chile","",1]]},
+  ],
+};
+// matematik-sortering laves med tilfældige tal hver gang
+const numSet = (t, bins, fn, lo, hi, skip) => () => {
+  const nums = shuffle(Array.from({length:hi-lo+1}, (_,i)=>lo+i).filter(n => n !== skip)).slice(0, 24);
+  return {t, bins, items: nums.map(n => ["", String(n), fn(n)])};
+};
+const fracSet = () => {
+  const items = [];
+  for (let den=3; den<=12; den++) for (let num=1; num<den; num++) if (num*2 !== den) items.push(["", `${num}/${den}`, num*2 < den ? 0 : 1]);
+  return {t:"Mindre eller større end en halv?", bins:["Mindre end ½","Større end ½"], items: shuffle(items).slice(0, 24)};
+};
+const MATHSORT = {
+  1: [numSet("Lige eller ulige?", ["Lige","Ulige"], n => n%2, 1, 20), numSet("Mindre end 10?", ["Mindre end 10","10 eller mere"], n => n<10 ? 0 : 1, 1, 20)],
+  2: [numSet("Lige eller ulige?", ["Lige","Ulige"], n => n%2, 1, 100), numSet("Over eller under 50?", ["Under 50","Over 50"], n => n<50 ? 0 : 1, 1, 99, 50)],
+  3: [numSet("Er tallet i 3-tabellen?", ["Ja","Nej"], n => n%3 ? 1 : 0, 2, 60), fracSet, numSet("Er tallet i 4-tabellen?", ["Ja","Nej"], n => n%4 ? 1 : 0, 2, 60)],
+};
+
+/* ---------- par- og quiz-generatorer ---------- */
+const picWordPairs = pool => (b, n) => shuffle(pool[b]).slice(0, n).map(([w,e]) => [e, w, w]);
+const textPairs = pool => (b, n) => shuffle(pool[b]).slice(0, n);
+function mathPairs(b, n){
+  const out = [], seen = new Set(); let guard = 0;
+  while (out.length < n && guard++ < 300){
+    const p = mathProblem(b, rnd(1, 9));
+    if (seen.has(p.a)) continue; seen.add(p.a);
+    out.push([p.full ? p.q : p.q, String(p.a)]);
+  }
+  return out;
+}
+const VOWELS = "AEIOUYÆØÅ";
+function misspell(word){
+  const out = new Set(); let guard = 0;
+  const ops = [
+    w => { const i = rnd(0, w.length-2); const a = w.split(""); [a[i],a[i+1]] = [a[i+1],a[i]]; return a.join(""); },
+    w => { if (w.length < 4) return w; const i = rnd(1, w.length-1); return w.slice(0,i) + w.slice(i+1); },
+    w => { const i = rnd(1, w.length-1); return w.slice(0,i) + w[i] + w.slice(i); },
+    w => { const idx = [...w].map((c,i)=>VOWELS.includes(c)?i:-1).filter(i=>i>=0); if (!idx.length) return w; const i = pick(idx);
+           return w.slice(0,i) + pick(VOWELS.replace(w[i],"").split("")) + w.slice(i+1); },
+  ];
+  while (out.size < 3 && guard++ < 80){ const m = pick(ops)(word); if (m !== word) out.add(m); }
+  return [...out];
+}
+function danQuiz(b, d, n){
+  const pool = shuffle(WORDS[b]).slice(0, n), all = WORDS[b].map(w => w[0]);
+  return pool.map(([w,e]) => {
+    const visual = `<div class="pic" aria-hidden="true">${e}</div>`;
+    if (b === 1 && Math.random() < .5){
+      const wrong = shuffle("ABDEFGHIKLMNOPRSTUVÆØÅ".replace(w[0],"").split("")).slice(0,3);
+      return {q:"Hvilket bogstav starter ordet med?", a:w[0], wrong, visual};
+    }
+    if (b === 1) return {q:"Hvilket ord passer til billedet?", a:w, wrong:shuffle(all.filter(x=>x!==w)).slice(0,3), visual};
+    return {q:"Hvilket ord er stavet rigtigt?", a:w, wrong:misspell(w), visual};
+  });
+}
+const langQuiz = (pool, langName, lang) => (b, d, n) => shuffle(pool[b]).slice(0, n).map(([w,e]) => ({
+  q:`Hvad hedder det på ${langName}?`, a:w, say:w, lang,
+  wrong: shuffle(pool[b].map(x=>x[0]).filter(x=>x!==w)).slice(0,3),
+  visual:`<div class="pic" aria-hidden="true">${e}</div>`,
+}));
+
+/* ================= fag og baner =================
+   Hvert fag har en plan med 10 baner; hver bane er en spiltype. */
+const TYPEINFO = {meteor:["☄️","Meteorregn"], clock:["⏰","Klokken"], sort:["🗂️","Sortering"], memory:["🃏","Memory"],
+  quiz:["❓","Quiz"], words:["🔤","Ordbygger"], timeline:["⏳","Rækkefølge"]};
+const SUBJECTS = [
+  {id:"mat", subj:"Matematik", name:"Talvulkanen", art:"☄️", c:"var(--grape)", map:"#cfc4ff",
+   desc:"Skyd meteorer ned, læs klokken, sortér tal og find regnestykker i memory.",
+   plan:["meteor","sort","meteor","memory","clock","meteor","sort","memory","meteor","clock"],
+   games:{ meteor:{},
+     clock:(b,k) => ({style:[["hour","half"],["quarter","five"],["five","minute"]][b-1][Math.min(k,1)]}),
+     sort:{sets:MATHSORT},
+     memory:{pairs:mathPairs, hint:() => "Find regnestykket og svaret, der hører sammen."} }},
+  {id:"dan", subj:"Dansk", name:"Bogstavbjerget", art:"🔤", c:"var(--coral)", map:"#ffcabf",
+   desc:"Byg ord, find stavefejl, sortér ord og find rim.",
+   plan:["words","quiz","sort","words","memory","quiz","words","sort","memory","words"],
+   games:{ words:{pool:WORDS}, quiz:{make:danQuiz}, sort:{sets:DANSORT},
+     memory:{pairs:textPairs(RIM), hint:b => b===3 ? "Find to ord, der betyder det samme." : "Find to ord, der rimer."} }},
+  {id:"eng", subj:"Engelsk", name:"English Island", art:"🫖", c:"var(--sky)", map:"#c3e0ff",
+   desc:"Memory, quiz og stav engelske ord. Du hører ordene udtalt.",
+   plan:["memory","quiz","words","memory","quiz","words","memory","quiz","words","memory"],
+   games:{ memory:{pairs:picWordPairs(ENG), lang:"en-GB", hint:() => "Find billedet og det engelske ord, der hører sammen."},
+     quiz:{make:langQuiz(ENG,"engelsk","en-GB")},
+     words:{pool:ENG, lang:"en-GB", alpha:"ABCDEFGHIJKLMNOPRSTUVWY"} }},
+  {id:"tys", subj:"Tysk", name:"Deutsche Insel", art:"🥨", c:"var(--teal)", map:"#bfeee8",
+   desc:"Memory, quiz og stav tyske ord. Du hører ordene udtalt på tysk.",
+   plan:["memory","quiz","words","memory","quiz","words","memory","quiz","words","memory"],
+   games:{ memory:{pairs:picWordPairs(DEU), lang:"de-DE", hint:() => "Find billedet og det tyske ord, der hører sammen."},
+     quiz:{make:langQuiz(DEU,"tysk","de-DE")},
+     words:{pool:DEU, lang:"de-DE", alpha:"ABCDEFGHIKLMNOPRSTUWZÄÖÜ"} }},
+  {id:"nat", subj:"Natur/teknologi", name:"Laboratoriet", art:"🧪", c:"var(--orange)", map:"#ffdcbc",
+   desc:"Sortér dyr og stoffer, sæt naturen i rækkefølge og find par om dyr og kroppen.",
+   plan:["sort","timeline","memory","sort","timeline","memory","sort","timeline","memory","sort"],
+   games:{ sort:{sets:SORT}, timeline:{seq:NATSEQ},
+     memory:{pairs:textPairs(NATMEM), hint:b => b===3 ? "Find organet og det, det gør." : "Find dyret og dets unge."} }},
+  {id:"his", subj:"Historie", name:"Tidsmaskinen", art:"⏳", c:"var(--rose)", map:"#ffd3e8",
+   desc:"Tidslinjer, quiz og memory fra dinosaurer til i dag.",
+   plan:["timeline","quiz","memory","timeline","quiz","memory","timeline","quiz","memory","timeline"],
+   games:{ timeline:{}, quiz:{bank:HISQ},
+     memory:{pairs:textPairs(HISMEM), hint:b => b===1 ? "Find tingen fra gamle dage og dens navn." : "Find personen og det, de er kendt for."} }},
+  {id:"vid", subj:"Geografi", name:"Jorden rundt", art:"🌍", c:"var(--leaf)", map:"#c3ecd0",
+   desc:"Quiz om verden, hovedstæder i memory og sortering af lande og byer.",
+   plan:["quiz","memory","sort","quiz","memory","sort","quiz","memory","sort","quiz"],
+   games:{ quiz:{bank:QUIZ}, sort:{sets:GEOSORT},
+     memory:{pairs:textPairs(GEOMEM), hint:b => b===1 ? "Find dyret og stedet, hvor det bor." : "Find landet og dets hovedstad."} }},
+];
+function buildSpec(s, b, d){
+  const type = s.plan[d-1], k = s.plan.slice(0, d-1).filter(t => t === type).length, g = s.games[type];
+  return Object.assign({type, k, ico: d === LEVELS ? "👑" : TYPEINFO[type][0]}, typeof g === "function" ? g(b,k) : (g || {}));
+}
+const RUNNERS = {meteor:playMath, clock:playClock, words:playWords, memory:playMemory, quiz:playQuiz, sort:playSort, timeline:playTimeline};
+
+/* ================= hub ================= */
+function renderTop(){
+  $("#avatar").textContent = S.avatar;
+  $("#pname").textContent = S.name || "Spiller";
+  $("#starCount").textContent = totalStars();
+  $("#soundBtn").textContent = S.sound ? "🔊 Lyd" : "🔇 Lyd";
+}
+function bandOf(id){ return S.band[id] || 1; }
+function renderHub(){
+  renderTop();
+  $("#islands").innerHTML = SUBJECTS.map(g => {
+    const b = bandOf(g.id), n = cleared(g.id,b), st = subjStars(g.id,b);
+    return `<button class="isle" style="--c:${g.c}" data-g="${g.id}">
+      <span class="art" aria-hidden="true">${g.art}</span>
+      <span><span class="subj">${g.subj}</span><h2 class="outline">${g.name}</h2><p>${g.desc}</p>
+      <span class="bar" aria-hidden="true"><i style="width:${n*10}%"></i></span>
+      <span class="meta"><span>${BANDNAME[b]} · bane ${n}/${LEVELS}</span><span><span class="star">★</span> ${st}/${LEVELS*3}</span></span></span>
+    </button>`;
+  }).join("");
+}
+$("#islands").addEventListener("click", e => { const b = e.target.closest(".isle"); if (b) { sfx.pop(); openMap(b.dataset.g); } });
+$("#soundBtn").onclick = () => { S.sound = !S.sound; save(); renderTop(); sfx.pop(); };
+$("#albumBtn").onclick = showAlbum;
+$("#profileBtn").onclick = showProfile;
+
+function show(view){
+  ["hub","mapView","play"].forEach(v => $("#"+v).hidden = v !== view);
+  window.scrollTo(0,0);
+}
+function showHub(){ stopGame(); renderHub(); show("hub"); }
+
+/* ================= banekort ================= */
+let subj = null;
+function openMap(id){ stopGame(); subj = SUBJECTS.find(s => s.id === id); renderMap(); show("mapView"); }
+function renderMap(){
+  renderTop();
+  const b = bandOf(subj.id);
+  $("#mapTitle").textContent = `${subj.subj}: ${subj.name}`;
+  $("#mapStars").innerHTML = `<span class="star">★</span> ${subjStars(subj.id,b)}/${LEVELS*3}`;
+  document.querySelectorAll("#bands button").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.b === b)));
+  let firstOpen = 0;
+  for (let d=1; d<=LEVELS; d++) if (unlocked(subj.id,b,d) && !starsOf(subj.id,b,d)) { firstOpen = d; break; }
+  let html = "";
+  for (let d=1; d<=LEVELS; d++){
+    const i = d-1, row = Math.floor(i/5), col = row % 2 ? 5 - (i%5) : (i%5) + 1;   // slangevej
+    const open = unlocked(subj.id,b,d), st = starsOf(subj.id,b,d), sp = buildSpec(subj,b,d);
+    const cls = !open ? "locked" : st ? "done" : d === firstOpen ? "cur" : "";
+    const stars = open ? [1,2,3].map(k => `<span class="${k<=st?"star":"off"}">★</span>`).join("") : "";
+    html += `<button class="node ${cls}" style="grid-row:${row+1};grid-column:${col}" data-d="${d}" ${open?"":"aria-disabled=\"true\""} aria-label="Bane ${d}${open?`, ${st} stjerner`:", låst"}">
+      <span class="dot">${open ? d : "🔒"}${sp.ico && open ? `<span class="ico" aria-hidden="true">${sp.ico}</span>` : ""}</span>
+      <span class="st">${stars}</span></button>`;
+  }
+  $("#map").style.setProperty("--mapc", subj.map);
+  $("#map").innerHTML = html;
+  const leg = [...new Set(subj.plan)].map(t => `${TYPEINFO[t][0]} ${TYPEINFO[t][1]}`);
+  leg.push("👑 Mesterbane", "Klar en bane med mindst 1 ★ for at låse den næste op");
+  $("#legend").innerHTML = leg.map(t => `<span>${t}</span>`).join("");
+}
+$("#bands").addEventListener("click", e => { const x = e.target.closest("button"); if (!x) return; S.band[subj.id] = +x.dataset.b; save(); sfx.pop(); renderMap(); });
+$("#map").addEventListener("click", e => {
+  const n = e.target.closest(".node"); if (!n) return;
+  if (n.classList.contains("locked")){ sfx.bad(); n.classList.remove("shake"); void n.offsetWidth; n.classList.add("shake"); return; }
+  startLevel(+n.dataset.d);
+});
+$("#mapBack").onclick = showHub;
+
+/* ================= spil-skal ================= */
+let cleanup = null, cur = null, score = 0;
+function stopGame(){ if (cleanup) { try{cleanup();}catch(e){} cleanup = null; } }
+function setScore(v){ score = v; $("#score").textContent = score; }
+function setStatus(html){ $("#status").innerHTML = html; $("#status").hidden = !html; }
+function setCombo(n){ $("#combo").hidden = n < 2; $("#comboN").textContent = n; }
+const heartsHTML = (n,max=3) => `<span class="hearts" aria-label="${n} liv">${"❤️".repeat(Math.max(0,n))}${"🤍".repeat(Math.max(0,max-n))}</span>`;
+
+function startLevel(d){
+  stopGame(); closeModal();
+  const b = bandOf(subj.id), sp = buildSpec(subj,b,d);
+  cur = {s:subj.id, b, d, sp};
+  $("#gameTitle").textContent = `${subj.subj} · Bane ${d} · ${TYPEINFO[sp.type][1]}`;
+  setScore(0); setCombo(0); setStatus("");
+  const stage = $("#stage"); stage.innerHTML = "";
+  show("play");
+  cleanup = RUNNERS[sp.type](stage, b, d, sp) || null;
+}
+$("#backBtn").onclick = () => { stopGame(); renderMap(); show("mapView"); };
+
+function finish(stars, line){
+  stopGame();
+  const k = pkey(cur.s,cur.b,cur.d);
+  const before = Math.min(STICKERS.length, Math.floor(totalStars()/5));
+  const prev = S.prog[k] || 0;
+  S.prog[k] = Math.max(prev, stars);
+  save();
+  const after = Math.min(STICKERS.length, Math.floor(totalStars()/5));
+  const fresh = STICKERS.slice(before, after);
+  const hasNext = cur.d < LEVELS && stars >= 1;
+  const newUnlock = hasNext && prev === 0;
+  if (stars >= 2 || fresh.length) { sfx.win(); confetti(stars===3?180:100); }
+  else if (stars === 1) sfx.ok();
+  const head = stars===3 ? "Fantastisk!" : stars===2 ? "Super godt!" : stars===1 ? "Bane klaret!" : "Næsten! Prøv igen";
+  const extra = stars > prev && prev > 0 ? `<br>Ny rekord på banen!` : "";
+  const unlockLine = newUnlock ? `<div class="newstick">Bane ${cur.d+1} er låst op! 🔓</div>`
+    : cur.d === LEVELS && stars >= 1 && prev === 0 ? `<div class="newstick">Du har klaret mesterbanen i ${BANDNAME[cur.b]}! 👑</div>` : "";
+  openModal(`
+    <h2>${head}</h2>
+    <div class="bigstars" aria-label="${stars} af 3 stjerner">${[1,2,3].map(i=>`<span class="${i<=stars?"on":""}">★</span>`).join("")}</div>
+    <p style="margin:0;font-size:18px">${line}<br>Point: <b>${score}</b>${extra}</p>
+    ${stars === 0 ? `<p style="margin:0;color:var(--ink-soft)">Du skal have mindst 1 ★ for at låse næste bane op.</p>` : ""}
+    ${unlockLine}
+    ${fresh.length ? `<div class="newstick">Nyt klistermærke!<b>${fresh.join(" ")}</b></div>` : nextStickerHTML()}
+    <div class="row">
+      ${hasNext ? `<button class="btn main" id="nextL">Næste bane ▶</button>` : ""}
+      <button class="btn ${hasNext?"":"main"}" id="again">Prøv igen</button>
+      <button class="btn" id="toMap">Banekort</button>
+    </div>`);
+  if (hasNext) $("#nextL").onclick = () => startLevel(cur.d+1);
+  $("#again").onclick = () => startLevel(cur.d);
+  $("#toMap").onclick = () => { closeModal(); renderMap(); show("mapView"); };
+  ($("#nextL") || $("#again")).focus();
+}
+function nextStickerHTML(){
+  const t = totalStars();
+  if (t >= STICKERS.length*5) return `<div class="newstick">Du har samlet alle klistermærker! 🏆</div>`;
+  const left = 5 - (t % 5);
+  return `<div class="field"><span style="font-size:14px">Næste klistermærke om ${left} ${left===1?"stjerne":"stjerner"}</span><div class="progress"><i style="width:${(t%5)*20}%"></i></div></div>`;
+}
+
+/* ================= modal ================= */
+function openModal(html){ $("#modal").innerHTML = html; $("#veil").hidden = false; }
+function closeModal(){ $("#veil").hidden = true; }
+const dismissable = () => S.name && !$("#modal").querySelector("#again");
+$("#veil").addEventListener("click", e => { if (e.target.id === "veil" && dismissable()) closeModal(); });
+addEventListener("keydown", e => { if (e.key === "Escape" && !$("#veil").hidden && dismissable()) closeModal(); });
+
+function showAlbum(){
+  const got = Math.min(STICKERS.length, Math.floor(totalStars()/5));
+  openModal(`<h2>Mit album</h2>
+    <p style="margin:0">${got} af ${STICKERS.length} klistermærker · ${totalStars()} ★ i alt</p>
+    <div class="album">${STICKERS.map((s,i)=> i<got ? `<div>${s}</div>` : `<div class="lock">${(i+1)*5}★</div>`).join("")}</div>
+    ${nextStickerHTML()}
+    <div class="row"><button class="btn main" id="closeM">Luk</button></div>`);
+  $("#closeM").onclick = closeModal;
+}
+function showProfile(){
+  let av = S.avatar;
+  openModal(`<h2>${S.name ? "Din figur" : "Velkommen til Klogeøen!"}</h2>
+    <form id="pf" style="display:flex;flex-direction:column;gap:16px">
+      <label class="field" for="nameIn">Hvad hedder du?<input id="nameIn" maxlength="16" autocomplete="off" value="${esc(S.name)}" placeholder="Skriv dit navn"></label>
+      <div><div style="margin-bottom:8px">Vælg din figur</div>
+      <div class="avs" id="avs">${AVATARS.map(a=>`<button type="button" data-a="${a}" aria-pressed="${a===av}">${a}</button>`).join("")}</div></div>
+      <div class="row"><button class="btn main" type="submit">${S.name ? "Gem" : "Start eventyret"}</button></div>
+    </form>`);
+  $("#avs").onclick = e => { const x = e.target.closest("button"); if (!x) return; av = x.dataset.a; sfx.pop();
+    $("#avs").querySelectorAll("button").forEach(y => y.setAttribute("aria-pressed", String(y===x))); };
+  $("#pf").onsubmit = e => { e.preventDefault(); S.name = $("#nameIn").value.trim() || "Spiller"; S.avatar = av; save(); closeModal(); renderTop(); sfx.ok(); };
+  setTimeout(()=>$("#nameIn").focus(), 50);
+}
+
+/* ================= MATEMATIK: Meteorregn ================= */
+function mathProblem(b, d){
+  const t = Math.random();
+  if (b === 1){
+    if (d <= 3){ const a=rnd(1,9), c=rnd(1,10-a); return {q:`${a} + ${c}`, a:a+c}; }
+    if (d <= 6){ if (t<.5){ const a=rnd(1,9), c=rnd(1,10-a); return {q:`${a} + ${c}`, a:a+c}; } const a=rnd(2,10), c=rnd(1,a); return {q:`${a} − ${c}`, a:a-c}; }
+    if (d <= 8){ if (t<.5){ const a=rnd(3,15), c=rnd(2,20-a); return {q:`${a} + ${c}`, a:a+c}; } const a=rnd(8,20), c=rnd(2,a-1); return {q:`${a} − ${c}`, a:a-c}; }
+    if (t < .4){ const a=rnd(1,10); return {q:`${a} + ${a}`, a:2*a}; }
+    const a=rnd(2,9), sum=rnd(a+1,20); return {q:`? + ${a} = ${sum}`, a:sum-a, full:true};
+  }
+  if (b === 2){
+    if (d <= 2){ const a=rnd(10,60), c=rnd(5,39); return {q:`${a} + ${c}`, a:a+c}; }
+    if (d <= 4){ if (t<.5){ const a=rnd(10,60), c=rnd(5,39); return {q:`${a} + ${c}`, a:a+c}; } const a=rnd(20,99), c=rnd(5,a-5); return {q:`${a} − ${c}`, a:a-c}; }
+    if (d <= 6){ const a=pick([2,5,10]), c=rnd(1,10); return {q:`${a} × ${c}`, a:a*c}; }
+    if (d <= 8){ const a=pick([2,3,4,5,10]), c=rnd(1,10); return {q:`${c} × ${a}`, a:a*c}; }
+    if (t < .35){ const a=pick([2,3,4,5,10]), c=rnd(2,10); return {q:`? × ${a} = ${a*c}`, a:c, full:true}; }
+    if (t < .7){ const a=rnd(20,99), c=rnd(5,a-5); return {q:`${a} − ${c}`, a:a-c}; }
+    const a=pick([3,4,5]), c=rnd(2,10); return {q:`${a} × ${c}`, a:a*c};
+  }
+  if (d <= 2){ const a=rnd(2,10), c=rnd(2,10); return {q:`${a} × ${c}`, a:a*c}; }
+  if (d <= 4){ const c=rnd(2,10), ans=rnd(2,10); return {q:`${c*ans} : ${c}`, a:ans}; }
+  if (d <= 6){ if (t<.5){ const a=rnd(100,500), c=rnd(20,350); return {q:`${a} + ${c}`, a:a+c}; } const a=rnd(200,900), c=rnd(20,a-50); return {q:`${a} − ${c}`, a:a-c}; }
+  if (d <= 8){ const a=rnd(11,29), c=rnd(2,6); return {q:`${a} × ${c}`, a:a*c}; }
+  if (t < .3){ const a=rnd(3,9), c=rnd(3,10); return {q:`? × ${a} = ${a*c}`, a:c, full:true}; }
+  if (t < .6){ const c=rnd(3,9), ans=rnd(6,12); return {q:`${c*ans} : ${c}`, a:ans}; }
+  if (t < .8){ const n=pick([2,4,10]), a=n*rnd(2,12); return {q:`${n===2?"½":n===4?"¼":"1/10"} af ${a}`, a:a/n}; }
+  const a=rnd(12,25), c=rnd(3,8); return {q:`${a} × ${c}`, a:a*c};
+}
+function distractors(ans, n){
+  const set = new Set([ans]);
+  const cands = shuffle([ans+1,ans-1,ans+2,ans-2,ans+10,ans-10,ans+5,ans-3,ans+3]);
+  for (const c of cands){ if (set.size > n) break; if (c >= 0) set.add(c); }
+  while (set.size <= n) set.add(ans + rnd(4,15));
+  set.delete(ans); return [...set];
+}
+function playMath(stage, b, d){
+  stage.innerHTML = `<div class="space" id="space"><div class="flash" id="flash"></div><div class="msg" id="msg"></div>
+    <div class="ground"><span class="problem" id="prob">?</span></div></div>`;
+  const space = $("#space"), GOAL = 8 + d;   // bane 1: 9 opgaver … bane 9: 17
+  let hearts = 3, solved = 0, combo = 0, meteors = [], prob = null, raf = 0, last = 0, alive = true, busy = false;
+  const status = () => setStatus(`${heartsHTML(hearts)} <span>${solved}/${GOAL}</span>`);
+  status();
+  const fallTime = () => Math.max(3.6, (b===1?11:b===2?10:9.5) - d*.45 - solved*.12);
+  function spawn(){
+    busy = false;
+    meteors.forEach(m => m.el.remove()); meteors = [];
+    prob = mathProblem(b, d);
+    $("#prob").textContent = prob.full ? prob.q : prob.q + " = ?";
+    const vals = shuffle([prob.a, ...distractors(prob.a, b===1 && d<5 ? 2 : 3)]);
+    const W = space.clientWidth, n = vals.length, H = space.clientHeight - 86, speed = H / fallTime();
+    vals.forEach((v,i) => {
+      const el = document.createElement("button");
+      el.className = "meteor"; el.textContent = v; el.setAttribute("aria-label", "Svar "+v);
+      const x = (W/n) * (i + .5);
+      const m = {el, v, x, y: -90 - Math.random()*70, speed: speed*(0.9+Math.random()*.2)};
+      el.style.left = x+"px"; el.style.transform = `translateY(${m.y}px)`;
+      el.onclick = () => hit(m);
+      space.appendChild(el); meteors.push(m);
+    });
+    $("#msg").textContent = "";
+  }
+  function hit(m){
+    if (!alive || busy) return;
+    if (m.v === prob.a){
+      busy = true; combo++; solved++;
+      setScore(score + 10 + Math.min(combo,8)*2); setCombo(combo);
+      sfx.boom(); m.el.style.setProperty("--t", m.el.style.transform); m.el.classList.add("boom");
+      meteors.filter(o=>o!==m).forEach(o=>o.el.classList.add("dud"));
+      status();
+      if (combo % 5 === 0) confetti(60);
+      if (solved >= GOAL) return end(true);
+      setTimeout(() => alive && spawn(), 450);
+    } else { sfx.bad(); m.el.classList.add("dud"); combo = 0; setCombo(0); lose(); }
+  }
+  function lose(){
+    hearts--; status(); const f = $("#flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+    if (hearts <= 0) end(false);
+  }
+  function end(won){
+    alive = false; cancelAnimationFrame(raf);
+    const stars = won ? (hearts === 3 ? 3 : 2) : solved >= GOAL/2 ? 1 : 0;
+    $("#msg").textContent = won ? "Øen er reddet! 🎉" : "Av, ingen liv tilbage!";
+    setTimeout(() => finish(stars, won ? `Du løste alle ${GOAL} opgaver${hearts===3?" uden at miste et liv":""}!` : `Du løste ${solved} af ${GOAL} opgaver.`), 900);
+  }
+  function frame(t){
+    if (!alive) return;
+    const dt = Math.min(.05, (t - (last||t))/1000); last = t;
+    const floor = space.clientHeight - 86 - 42;
+    for (const m of meteors){ if (m.el.classList.contains("boom")) continue; m.y += m.speed*dt; m.el.style.transform = `translateY(${m.y}px)`; }
+    const right = meteors.find(m => m.v === prob.a);
+    if (!busy && right && right.y > floor){
+      busy = true; sfx.bad(); combo = 0; setCombo(0);
+      $("#msg").textContent = prob.full ? `? = ${prob.a}` : `${prob.q} = ${prob.a}`;
+      meteors.forEach(o=>o.el.classList.add("dud"));
+      lose();
+      if (alive) setTimeout(() => alive && spawn(), 1400);
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  $("#msg").textContent = "Klar? 3 · 2 · 1 …";
+  const t0 = setTimeout(() => { spawn(); raf = requestAnimationFrame(frame); }, 1100);
+  return () => { alive = false; clearTimeout(t0); cancelAnimationFrame(raf); };
+}
+
+/* ================= quiz-motor (klokke + viden) ================= */
+function runQuiz(stage, secs, questions){
+  const N = questions.length;
+  let i = 0, correct = 0, combo = 0, raf = 0, deadline = 0, locked = false, timers = [];
+  function next(){
+    if (i >= N){
+      const stars = correct === N ? 3 : correct >= N - 1 ? 2 : correct >= Math.ceil(N/2) ? 1 : 0;
+      return finish(stars, `Du svarede rigtigt på ${correct} af ${N}.`);
+    }
+    const q = questions[i]; locked = false;
+    setStatus(`${i+1}/${N}`);
+    const opts = shuffle([q.a, ...q.wrong]);
+    stage.innerHTML = `<div class="quiz">
+      <div class="timer" aria-hidden="true"><i id="tbar"></i></div>
+      ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
+      <div class="q-text">${esc(q.q)}</div>
+      <div class="opts">${opts.map(o=>`<button class="opt">${esc(o)}</button>`).join("")}</div>
+    </div>`;
+    stage.querySelectorAll(".opt").forEach(x => x.onclick = () => answer(x));
+    deadline = performance.now() + secs*1000;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+  }
+  function tick(t){
+    const left = Math.max(0, (deadline - t)/1000), bar = $("#tbar");
+    if (bar){ bar.style.transform = `scaleX(${left/secs})`; bar.style.background = left < secs*.3 ? "var(--bad)" : left < secs*.6 ? "var(--sun)" : "var(--leaf)"; }
+    if (left <= 0) return answer(null);
+    if (!locked) raf = requestAnimationFrame(tick);
+  }
+  function answer(btn){
+    if (locked) return; locked = true; cancelAnimationFrame(raf);
+    const q = questions[i], btns = [...stage.querySelectorAll(".opt")];
+    btns.forEach(x => { x.disabled = true; if (x.textContent === q.a) x.classList.add("ok"); });
+    const right = btn && btn.textContent === q.a;
+    if (right){
+      correct++; combo++; setCombo(combo);
+      setScore(score + 10 + Math.round(Math.max(0,(deadline - performance.now())/1000)) + Math.min(combo,6)*2);
+      sfx.ok(); if (combo >= 3) confetti(40);
+      if (q.say) speak(q.say, q.lang);
+    } else {
+      combo = 0; setCombo(0); sfx.bad();
+      if (btn){ btn.classList.add("no","shake"); }
+    }
+    i++; timers.push(setTimeout(next, right ? 900 : 1800));
+  }
+  next();
+  return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); };
+}
+
+/* ================= MATEMATIK: klokke-baner ================= */
+function clockSVG(h, m){
+  const ha = (h%12)*30 + m*.5, ma = m*6;
+  let ticks = "", nums = "";
+  for (let k=0;k<60;k++){ const big = k%5===0; ticks += `<line x1="100" y1="${big?16:18}" x2="100" y2="${big?28:23}" stroke="#1d2742" stroke-width="${big?4:1.5}" stroke-linecap="round" transform="rotate(${k*6} 100 100)"/>`; }
+  for (let n=1;n<=12;n++){ const a = n*30*Math.PI/180; nums += `<text x="${(100+62*Math.sin(a)).toFixed(1)}" y="${(100-62*Math.cos(a)+8).toFixed(1)}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="900" font-size="22" fill="#1d2742">${n}</text>`; }
+  return `<svg class="clock" viewBox="0 0 200 200" role="img" aria-label="Urskive">
+    <circle cx="100" cy="100" r="94" fill="#fffaf0" stroke="#1d2742" stroke-width="6"/>
+    <circle cx="100" cy="100" r="86" fill="#fff4cf"/>${ticks}${nums}
+    <line x1="100" y1="108" x2="100" y2="54" stroke="#1d2742" stroke-width="9" stroke-linecap="round" transform="rotate(${ha} 100 100)"/>
+    <line x1="100" y1="112" x2="100" y2="30" stroke="#ff6a55" stroke-width="5" stroke-linecap="round" transform="rotate(${ma} 100 100)"/>
+    <circle cx="100" cy="100" r="7" fill="#1d2742"/></svg>`;
+}
+const nh = h => h % 12 + 1;
+const pad = n => String(n).padStart(2,"0");
+const MINUTES = {hour:[0], half:[0,30], quarter:[0,15,30,45]};
+function clockLabel(h, m, style){
+  if (style === "five" || style === "minute") return `${h}:${pad(m)}`;
+  if (m === 0) return `Klokken ${h}`;
+  if (m === 30) return `Halv ${nh(h)}`;
+  if (m === 15) return `Kvart over ${h}`;
+  return `Kvart i ${nh(h)}`;
+}
+function randMinute(style){ return style === "five" ? rnd(0,11)*5 : style === "minute" ? rnd(0,59) : pick(MINUTES[style]); }
+function clockQuestion(style){
+  const h = rnd(1,12), m = randMinute(style), a = clockLabel(h,m,style), wrong = new Set();
+  if (m === 30 && !["five","minute"].includes(style)) wrong.add(`Halv ${h}`);     // klassisk fejl
+  if (m === 45) wrong.add(`Kvart i ${h}`);
+  if (style === "five" || style === "minute"){
+    const hh = Math.floor(m/5) || 12, mm = (h%12)*5;                                 // byttede visere
+    if (hh !== h || mm !== m) wrong.add(`${hh}:${pad(mm)}`);
+    wrong.add(`${h}:${pad((m+30)%60)}`);
+    if (style === "minute") wrong.add(`${h}:${pad((m+5)%60)}`);
+  }
+  let guard = 0;
+  while (wrong.size < 4 && guard++ < 60){
+    const h2 = style === "hour" || style === "half" ? rnd(1,12) : pick([h, nh(h), rnd(1,12)]);
+    const lab = clockLabel(h2, randMinute(style), style); if (lab !== a) wrong.add(lab);
+  }
+  wrong.delete(a);
+  return {q:"Hvad er klokken?", a, wrong:shuffle([...wrong]).slice(0,3), visual:clockSVG(h,m)};
+}
+function playClock(stage, b, d, sp){
+  const qs = [], seen = new Set();
+  let guard = 0;
+  while (qs.length < 8 && guard++ < 200){ const q = clockQuestion(sp.style); if (!seen.has(q.a)){ seen.add(q.a); qs.push(q); } }
+  const secs = (b===1 ? 22 : b===2 ? 18 : 16) - (d===10 ? 4 : 0);
+  return runQuiz(stage, secs, qs);
+}
+
+/* ================= NATUR & GEOGRAFI ================= */
+function playQuiz(stage, b, d, sp){
+  const n = 5 + Math.ceil(d/3);                                  // 6–9 spørgsmål
+  const qs = sp.make ? sp.make(b, d, n) : shuffle(sp.bank[b]).slice(0, n).map(([q,a,...wrong]) => ({q, a, wrong}));
+  const secs = (b===1 ? 24 : b===2 ? 20 : 17) - Math.round(d*1.1);
+  return runQuiz(stage, Math.max(8, secs), qs);
+}
+
+/* ================= DANSK: Ordbyggeren ================= */
+function playWords(stage, b, d, sp){
+  const pool = (sp.pool || WORDS)[b].map(([w,e]) => [w.toUpperCase(), e]).sort((x,y) => x[0].length - y[0].length);
+  const win = 8, startIdx = Math.round((d-1)/(LEVELS-1) * (pool.length - win));
+  const ROUNDS = 5, list = shuffle(pool.slice(startIdx, startIdx + win)).slice(0, ROUNDS);
+  const decoys = d >= 8 ? 2 : d >= 4 ? 1 : 0;
+  const limit = d >= 6 ? (b===1 ? 60 : 48) - d*3 : 0;          // sekunder pr. ord på de høje baner
+  const ALPHA = sp.alpha || "ABDEFGHIKLMNOPRSTUVYÆØÅ";
+  let i = 0, built = [], hints = 0, t0 = 0, timers = [], raf = 0, solvedN = 0, done = false;
+  function next(){
+    cancelAnimationFrame(raf);
+    if (i >= ROUNDS){
+      const max = ROUNDS*30;
+      const stars = solvedN === ROUNDS && score >= max*.75 ? 3 : solvedN >= ROUNDS-1 ? 2 : solvedN >= 3 ? 1 : 0;
+      return finish(stars, `Du byggede ${solvedN} af ${ROUNDS} ord.`);
+    }
+    const [word, emoji] = list[i];
+    let letters = word.split("");
+    for (let k=0;k<decoys;k++) letters.push(pick(ALPHA.split("")));
+    letters = shuffle(letters);
+    if (letters.join("") === word && word.length > 1) letters.reverse();
+    built = []; hints = 0; t0 = performance.now(); done = false;
+    setStatus(`Ord ${i+1}/${ROUNDS}`);
+    stage.innerHTML = `<div class="words">
+      ${limit ? `<div class="timer wtimer" aria-hidden="true"><i id="tbar"></i></div>` : ""}
+      <div class="pic" aria-hidden="true">${emoji}</div>
+      <div class="slots" id="slots">${word.split("").map((_,k)=>`<button class="slot" data-k="${k}" aria-label="Plads ${k+1}"></button>`).join("")}</div>
+      <div class="tiles" id="tiles">${letters.map((ch,k)=>`<button class="tile" data-t="${k}">${ch}</button>`).join("")}</div>
+      <div class="row"><button class="btn" id="hint">💡 Hjælp (−5)</button><button class="btn" id="clear">↺ Ryd</button></div>
+      ${decoys ? `<p style="margin:0;font-size:14px;color:var(--ink-soft)">Pas på: ${decoys===1?"ét bogstav":"to bogstaver"} hører ikke til ordet.</p>` : ""}
+    </div>`;
+    const tiles = [...stage.querySelectorAll(".tile")], slots = [...stage.querySelectorAll(".slot")];
+    const draw = () => {
+      slots.forEach((s,k) => { const x = built[k]; s.textContent = x ? x.ch : ""; s.classList.toggle("filled", !!x); });
+      tiles.forEach(t => t.disabled = done || built.some(x => x.t === +t.dataset.t));
+    };
+    const correctPrefix = () => { let k = 0; while (k < built.length && built[k].ch === word[k]) k++; return k; };
+    const check = () => {
+      if (built.length < word.length) return;
+      if (built.map(x=>x.ch).join("") === word){
+        done = true; solvedN++; cancelAnimationFrame(raf);
+        const secs = (performance.now()-t0)/1000;
+        setScore(score + Math.max(5, 20 - hints*5 + Math.max(0, Math.round(10 - secs/2))));
+        sfx.win(); confetti(70); $("#slots").classList.add("win"); draw();
+        if (sp.lang) speak(list[i][0].toLowerCase(), sp.lang);
+        i++; timers.push(setTimeout(next, 1100));
+      } else {
+        sfx.bad(); const el = $("#slots"); el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
+        const keep = correctPrefix();
+        timers.push(setTimeout(() => { built = built.slice(0, keep); draw(); }, 450));
+      }
+    };
+    $("#tiles").onclick = e => { const t = e.target.closest(".tile"); if (!t || t.disabled || done || built.length >= word.length) return;
+      sfx.pop(); built.push({ch:t.textContent, t:+t.dataset.t}); draw(); check(); };
+    $("#slots").onclick = e => { const s = e.target.closest(".slot"); if (!s || done) return; const k = +s.dataset.k;
+      if (k < built.length){ built = built.slice(0,k); draw(); } };
+    $("#clear").onclick = () => { if (done) return; built = []; draw(); };
+    $("#hint").onclick = () => {
+      if (done) return;
+      const keep = correctPrefix(); built = built.slice(0, keep);
+      if (keep >= word.length) return;
+      const t = tiles.find(t => t.textContent === word[keep] && !built.some(x => x.t === +t.dataset.t));
+      if (!t) return;
+      hints++; sfx.pop(); built.push({ch:word[keep], t:+t.dataset.t}); draw(); check();
+    };
+    draw();
+    if (limit){
+      const tick = t => {
+        const left = Math.max(0, limit - (t - t0)/1000), bar = $("#tbar");
+        if (bar){ bar.style.transform = `scaleX(${left/limit})`; bar.style.background = left < limit*.3 ? "var(--bad)" : left < limit*.6 ? "var(--sun)" : "var(--leaf)"; }
+        if (done) return;
+        if (left <= 0){
+          done = true; sfx.bad();
+          built = word.split("").map(ch => ({ch, t:-1})); draw(); $("#slots").classList.add("reveal");
+          i++; timers.push(setTimeout(next, 1600)); return;
+        }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }
+  }
+  next();
+  return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); };
+}
+
+/* ================= HISTORIE: Tidsmaskinen ================= */
+function playTimeline(stage, b, d, sp){
+  const ROUNDS = 5, n = d <= 3 ? 3 : d <= 7 ? 4 : 5;
+  let r = 0, correct = 0, combo = 0, timers = [];
+  function next(){
+    if (r >= ROUNDS){
+      const stars = correct === ROUNDS ? 3 : correct >= ROUNDS-1 ? 2 : correct >= 3 ? 1 : 0;
+      return finish(stars, `Du fik ${correct} af ${ROUNDS} rækkefølger helt rigtige.`);
+    }
+    setStatus(`Runde ${r+1}/${ROUNDS}`);
+    let evs, title = "Hvad skete først?", sub = "Tryk på begivenhederne i rækkefølge. Den ældste først.", first = "Ældst", last = "Nyest";
+    if (sp.seq){
+      const sets = sp.seq[b], set = sets[(r + sp.k*2) % sets.length];
+      const all = set.items.map((it,ix) => [it[0], it[1], ix, ""]);
+      const keep = shuffle(all.map((_,ix) => ix)).slice(0, Math.min(n, all.length)).sort((x,y) => x-y);
+      evs = shuffle(keep.map(ix => all[ix]));
+      first = set.first || "Først"; last = set.last || "Sidst"; title = set.t;
+      sub = `Tryk på dem i rækkefølge. ${first} øverst.`;
+    } else evs = shuffle(HIST[b]).slice(0, n);
+    const order = evs.slice().sort((x,y) => x[2]-y[2]);
+    const N = evs.length;
+    let placed = [], done = false;
+    stage.innerHTML = `<div class="tl">
+      <div class="q-text">${esc(title)}</div>
+      <p class="sub">${esc(sub)}</p>
+      <div class="tl-cards" id="evs">${evs.map((e,i)=>`<button class="ev" data-i="${i}"><span class="e" aria-hidden="true">${e[1]}</span><span>${esc(e[0])}</span></button>`).join("")}</div>
+      <ol class="tl-line" id="line">${order.map((_,k)=>`<li><button class="tslot" data-k="${k}"><span class="pos">${k+1}</span><span class="txt"></span><span></span></button></li>`).join("")}</ol>
+      <div class="row" id="nextRow" hidden><button class="btn main" id="nextR">Næste ▶</button></div>
+    </div>`;
+    const slots = [...stage.querySelectorAll(".tslot")], cards = [...stage.querySelectorAll(".ev")];
+    const draw = (list, showYears) => slots.forEach((s,k) => {
+      const e = list[k];
+      s.classList.toggle("filled", !!e);
+      s.children[1].innerHTML = e ? `${e[1]} ${esc(e[0])}` : `<span class="hint">${k===0 ? first : k===N-1 ? last : ""}</span>`;
+      s.children[2].className = showYears && e && e[3] ? "yr" : "";
+      s.children[2].textContent = showYears && e ? e[3] : "";
+    });
+    const refresh = () => { draw(placed.map(i => evs[i]), false); cards.forEach(c => c.disabled = done || placed.includes(+c.dataset.i)); };
+    $("#evs").onclick = e => { const c = e.target.closest(".ev"); if (!c || c.disabled || done) return;
+      sfx.pop(); placed.push(+c.dataset.i); refresh(); if (placed.length === N) check(); };
+    $("#line").onclick = e => { const s = e.target.closest(".tslot"); if (!s || done) return; const k = +s.dataset.k;
+      if (k < placed.length){ placed = placed.slice(0,k); refresh(); } };
+    function check(){
+      done = true; refresh();
+      const list = placed.map(i => evs[i]);
+      const okAll = list.every((e,k) => e[2] === order[k][2]);
+      draw(list, true);
+      slots.forEach((s,k) => s.classList.add(list[k][2] === order[k][2] ? "ok" : "no"));
+      if (okAll){
+        correct++; combo++; setCombo(combo);
+        setScore(score + 20 + n*3 + Math.min(combo,5)*2);
+        sfx.win(); confetti(60);
+      } else {
+        combo = 0; setCombo(0); sfx.bad();
+        timers.push(setTimeout(() => {          // vis den rigtige rækkefølge med årstal
+          slots.forEach(s => s.classList.remove("ok","no"));
+          draw(order, true); slots.forEach(s => s.classList.add("ok"));
+        }, 1300));
+      }
+      $("#nextRow").hidden = false;
+      $("#nextR").onclick = () => { r++; next(); };
+      timers.push(setTimeout(() => $("#nextR") && $("#nextR").focus(), 50));
+    }
+    refresh();
+  }
+  next();
+  return () => timers.forEach(clearTimeout);
+}
+
+/* ================= NATUR/TEKNOLOGI: Sorteringsmaskinen ================= */
+function playSort(stage, b, d, sp){
+  const sets = sp.sets[b];
+  let set = d === LEVELS ? pick(sets) : sets[sp.k % sets.length];
+  if (typeof set === "function") set = set();
+  const N = 8 + d, list = [];
+  while (list.length < N){
+    for (const it of shuffle(set.items)){ if (list.length < N && list[list.length-1] !== it) list.push(it); }
+  }
+  const secs = Math.max(b===1 ? 4.5 : 3.5, (b===1 ? 11 : b===2 ? 10 : 9) - d*.6);
+  let i = 0, hearts = 3, combo = 0, raf = 0, deadline = 0, locked = true, timers = [], alive = true;
+  stage.innerHTML = `<div class="sorter">
+    <div class="q-text">${esc(set.t)}</div>
+    <div class="timer wtimer" aria-hidden="true"><i id="tbar"></i></div>
+    <div class="item" id="item"></div>
+    <p class="fb" id="fb"></p>
+    <div class="bins" style="--n:${set.bins.length}">${set.bins.map((x,k)=>`<button class="bin" data-k="${k}">${esc(x)}</button>`).join("")}</div>
+  </div>`;
+  const bins = [...stage.querySelectorAll(".bin")];
+  const status = () => setStatus(`${heartsHTML(hearts)} <span>${Math.min(i+1,N)}/${N}</span>`);
+  function show(){
+    if (!alive) return;
+    if (hearts <= 0 || i >= N) return end();
+    status();
+    const [name, emoji] = list[i], el = $("#item");
+    el.innerHTML = emoji ? `<span class="e">${esc(emoji)}</span>${name ? `<span>${esc(name)}</span>` : ""}`
+                         : `<span class="e txt">${esc(name)}</span>`;
+    el.classList.remove("in"); void el.offsetWidth; el.classList.add("in");
+    $("#fb").textContent = "";
+    bins.forEach(x => { x.classList.remove("ok","no"); x.disabled = false; });
+    locked = false; deadline = performance.now() + secs*1000;
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+  }
+  function tick(t){
+    const left = Math.max(0, (deadline - t)/1000), bar = $("#tbar");
+    if (bar){ bar.style.transform = `scaleX(${left/secs})`; bar.style.background = left < secs*.3 ? "var(--bad)" : left < secs*.6 ? "var(--sun)" : "var(--leaf)"; }
+    if (left <= 0) return answer(null);
+    if (!locked) raf = requestAnimationFrame(tick);
+  }
+  function answer(k){
+    if (locked) return; locked = true; cancelAnimationFrame(raf);
+    const [name, , right] = list[i];
+    bins.forEach(x => x.disabled = true);
+    bins[right].classList.add("ok");
+    if (k === right){
+      combo++; setCombo(combo);
+      setScore(score + 10 + Math.round(Math.max(0,(deadline - performance.now())/1000)) + Math.min(combo,8)*2);
+      sfx.ok(); if (combo % 5 === 0) confetti(50);
+      $("#fb").textContent = "Rigtigt!";
+    } else {
+      combo = 0; setCombo(0); sfx.bad(); hearts--;
+      if (k !== null) bins[k].classList.add("no");
+      $("#fb").textContent = `${k === null ? "For langsomt! " : ""}${name || list[i][1]}: ${set.bins[right]}`;
+    }
+    i++; status();
+    timers.push(setTimeout(show, k === right ? 550 : 1500));
+  }
+  function end(){
+    alive = false; cancelAnimationFrame(raf);
+    const done = i >= N && hearts > 0;
+    const stars = done ? (hearts === 3 ? 3 : 2) : i >= N/2 ? 1 : 0;
+    finish(stars, done ? `Du sorterede alle ${N}${hearts===3 ? " uden en eneste fejl" : ""}!` : `Du nåede ${i} af ${N}, før livene slap op.`);
+  }
+  stage.querySelector(".bins").onclick = e => { const x = e.target.closest(".bin"); if (x) answer(+x.dataset.k); };
+  $("#fb").textContent = "Klar …";
+  timers.push(setTimeout(show, 700));
+  return () => { alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); };
+}
+
+/* ================= ENGELSK + TYSK: Memory ================= */
+function playMemory(stage, b, d, sp){
+  const chosen = sp.pairs(b, Math.min(8, 3 + Math.ceil(d/2)));  // 4 → 8 par
+  const pairs = chosen.length;
+  const big = s => /^\d+$/.test(s) || /^[\p{Extended_Pictographic}️‍]+$/u.test(s);
+  const cards = shuffle(chosen.flatMap(([l,r,say],k) => [{k, face:l, word:say, kind:big(l)?"pic":"word"}, {k, face:r, word:say, kind:big(r)?"pic":"word"}]));
+  const textOnly = cards.every(c => c.kind === "word");
+  const limit = d >= 7 ? Math.round(pairs * (b===1 ? 14 : 11) * (textOnly ? 1.4 : 1)) : 0;   // tidsgrænse på de høje baner
+  let open = [], moves = 0, found = 0, lock = false, start = performance.now(), timers = [], iv = 0, over = false;
+  stage.innerHTML = `<div class="memstat"><span class="tag" id="mv">Træk: 0</span><span class="tag" id="tm">${limit ? `Tid tilbage: ${limit} s` : "Tid: 0 s"}</span></div>
+    <div class="mem">${cards.map((c,i)=>`<button class="card" data-i="${i}" aria-label="Skjult kort"><span class="in"><span class="f">?</span><span class="b ${c.kind==="word"?"word":""}">${esc(c.face)}</span></span></button>`).join("")}</div>
+    <p style="text-align:center;color:var(--ink-soft);font-size:14px;margin:14px 0 0">${esc(sp.hint ? sp.hint(b) : "Find de to kort, der hører sammen.")}${sp.lang ? " Når du finder et par, siger øen ordet højt." : ""}</p>`;
+  setStatus(`Par 0/${pairs}`);
+  iv = setInterval(() => {
+    const el = $("#tm"), s = Math.round((performance.now()-start)/1000); if (!el) return;
+    if (limit){
+      el.textContent = `Tid tilbage: ${Math.max(0, limit - s)} s`;
+      if (s >= limit && !over){ over = true; clearInterval(iv); lock = true; sfx.bad();
+        timers.push(setTimeout(() => finish(found >= Math.ceil(pairs/2) ? 1 : 0, `Tiden løb ud. Du fandt ${found} af ${pairs} par.`), 600)); }
+    } else el.textContent = `Tid: ${s} s`;
+  }, 250);
+  const els = [...stage.querySelectorAll(".card")];
+  stage.querySelector(".mem").onclick = e => {
+    const x = e.target.closest(".card"); if (!x || lock || over) return;
+    const i = +x.dataset.i, c = cards[i];
+    if (x.classList.contains("up") || x.classList.contains("done")) return;
+    x.classList.add("up"); x.setAttribute("aria-label", c.face); sfx.pop();
+    open.push(i);
+    if (open.length < 2) return;
+    moves++; $("#mv").textContent = `Træk: ${moves}`;
+    const [p,q] = open; open = [];
+    if (cards[p].k === cards[q].k){
+      found++; setStatus(`Par ${found}/${pairs}`); setScore(score + 20);
+      timers.push(setTimeout(() => { els[p].classList.add("done"); els[q].classList.add("done"); sfx.ok(); if (sp.lang && cards[p].word) speak(cards[p].word, sp.lang); }, 300));
+      if (found === pairs){
+        over = true; clearInterval(iv);
+        const stars = moves <= pairs + 3 ? 3 : moves <= Math.round(pairs*1.8) ? 2 : 1;
+        const secs = Math.round((performance.now()-start)/1000);
+        setScore(score + Math.max(0, 120 - moves*4));
+        timers.push(setTimeout(() => finish(stars, `Alle ${pairs} par fundet på ${moves} træk og ${secs} sekunder.`), 1200));
+      }
+    } else {
+      lock = true;
+      timers.push(setTimeout(() => { [p,q].forEach(k => { els[k].classList.remove("up"); els[k].setAttribute("aria-label","Skjult kort"); }); lock = false; }, 900));
+    }
+  };
+  return () => { clearInterval(iv); timers.forEach(clearTimeout); };
+}
+
+/* ================= start ================= */
+renderHub();
+if (!S.name) showProfile();
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>

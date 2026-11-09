@@ -1762,9 +1762,24 @@ function makeAvatar(L){
   }
   if (L.glasses){ part(.2,.15,.03, -.13,1.94,.3, "#1d2742"); part(.2,.15,.03, .13,1.94,.3, "#1d2742"); part(.08,.03,.03, 0,1.95,.3, "#1d2742");
     part(.14,.09,.035, -.13,1.94,.305, "#bfe6f5"); part(.14,.09,.035, .13,1.94,.305, "#bfe6f5"); }
-  if (L.beard){ part(.56,.2,.08, 0,1.7,.27, hc); part(.3,.08,.08, 0,1.82,.29, hc); }
+  if (L.beard){ const bc = L.beardCol || hc; part(.56,.13,.06, 0,1.665,.265, bc); part(.08,.16,.06, -.25,1.75,.265, bc); part(.08,.16,.06, .25,1.75,.265, bc); part(.26,.045,.05, 0,1.815,.29, bc); }
   const top = L.hairStyle && L.hairStyle !== "none" ? 2.27 : 2.16;
   A.prop = null;
+  if (L.hat === "student"){
+    part(.66,.2,.66, 0,top+.08,0, "#fbfbf7");
+    part(.68,.09,.68, 0,top-.02,0, "#1f2f6b");
+    part(.52,.04,.26, 0,top-.05,.42, "#14141a");
+    part(.1,.06,.03, 0,top-.02,.345, "#ffc22e");
+  }
+  if (L.hat === "flower"){
+    [[-.33,2.0,0,.06,.32],[ .33,2.0,0,.06,.32]].forEach(([x,y,z,w,h]) => part(w,h,.08, x,y,z, "#3d9bff"));
+    part(.66,.06,.08, 0,top+.03,0, "#3d9bff");
+    const fx = -.2, fy = top+.12, fz = .05;
+    part(.34,.1,.34, fx,fy,fz, "#ffd23f");
+    part(.26,.12,.26, fx,fy+.05,fz, "#9b3fd0");
+    part(.16,.14,.16, fx,fy+.09,fz, "#7fd3f0");
+    part(.07,.06,.07, fx,fy+.14,fz, "#e8436a");
+  }
   if (L.hat === "cap"){ part(.6,.16,.6, 0,top+.04,0, L.shirt); part(.6,.06,.32, 0,top-.02,.42, L.shirt); }
   if (L.hat === "crown"){ part(.6,.16,.6, 0,top+.04,0, "#ffc22e"); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b]) => part(.12,.16,.12, a*.24,top+.2,b*.24, "#ffc22e")); part(.1,.1,.03, 0,top+.06,.31, "#e8432f"); }
   if (L.hat === "top"){ const m = new T.Mesh(new T.CylinderGeometry(.27,.27,.55,16), M("#1d2742")); m.position.set(0,top+.3,0); g.add(m);
@@ -2056,7 +2071,8 @@ function renderShop(){
       <button data-ext="${x.id}" class="${own ? "on" : ""}" ${own || S.coins < x.price ? "disabled" : ""}>${own ? "Har den" : "Køb"}</button></div>`;
   };
   const rk = rankIdx();
-  const figs = `<div><span class="lbl">Rang-figurer</span><div class="items">${RANKS.map((r,i) => `<div class="it"><span style="display:flex;gap:8px;align-items:center">${rankPortrait(r.look, 40)}<span>${r.name}<small>${r.title}${i > rk ? ` · kræver ${r.min} ★` : ""}</small></span></span>
+  const figs = `<div><span class="lbl">Figurer</span><div class="items">${FREE_FIGS.map((f,i) => `<div class="it"><span style="display:flex;gap:8px;align-items:center">${rankPortrait(f.look, 40)}<span>${f.name}<small>${f.title}</small></span></span>
+      <button data-free="${i}">Bliv ${f.name}</button></div>`).join("")}${RANKS.map((r,i) => `<div class="it"><span style="display:flex;gap:8px;align-items:center">${rankPortrait(r.look, 40)}<span>${r.name}<small>${r.title}${i > rk ? ` · kræver ${r.min} ★` : ""}</small></span></span>
       <button data-fig="${i}" ${i > rk ? "disabled" : ""}>${i > rk ? "🔒" : "Bliv " + r.name}</button></div>`).join("")}</div></div>`;
   $("#shop").innerHTML = `<h3>Min figur</h3>
     <p style="margin:0;font-size:14px;color:var(--ink-soft)">Du har ${S.coins} 🪙. Tjen flere ved at klare baner i fagene (5 pr. stjerne) og i forhindringsbanen.</p>
@@ -2071,7 +2087,8 @@ function renderShop(){
 }
 $("#shop").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || b.disabled) return;
-  if (b.dataset.fig !== undefined){ const r = RANKS[+b.dataset.fig]; if (+b.dataset.fig > rankIdx()) return;
+  if (b.dataset.free !== undefined){ const f = FREE_FIGS[+b.dataset.free]; S.look = Object.assign({}, f.look); sfx.win(); toast(`Du er nu ${f.name}!`); }
+  else if (b.dataset.fig !== undefined){ const r = RANKS[+b.dataset.fig]; if (+b.dataset.fig > rankIdx()) return;
     S.look = Object.assign({}, r.look); if (!owns(S.look.hat)) S.owned.push(S.look.hat); sfx.win(); toast(`Du er nu ${r.name}!`); }
   else if (b.dataset.k){ S.look[b.dataset.k] = b.dataset.v; sfx.pop(); }
   else if (b.dataset.hat){
@@ -2661,15 +2678,19 @@ function playStyle(stage, b, d){
 // Midlertidige figurer – rettes til efter billeder/beskrivelser af personerne.
 const RANKS = [
   {name:"Mor", title:"Begynder", min:0, e:"🌱",
-   look:{skin:"#f6d2ad", shirt:"#ff7eb6", pants:"#3d7bff", hat:"none", hairStyle:"long", hairCol:"#7a4a2a"}},
+   look:{skin:"#f6d2b8", shirt:"#62626c", pants:"#1d1d24", hat:"none", hairStyle:"long", hairCol:"#d9b878"}},
   {name:"Mormor", title:"Lidt øvet", min:20, e:"🌿",
    look:{skin:"#f6d2ad", shirt:"#9b5cff", pants:"#1d2742", hat:"none", hairStyle:"short", hairCol:"#c9c9d1", glasses:true}},
   {name:"Onkel L", title:"Middel", min:60, e:"🌳",
-   look:{skin:"#eab98c", shirt:"#2fa65a", pants:"#2b3a67", hat:"cap", hairStyle:"short", hairCol:"#3a2a1f", beard:true}},
+   look:{skin:"#f6d2b8", shirt:"#ece3cf", pants:"#ece3cf", hat:"student", hairStyle:"short", hairCol:"#9a7350", glasses:true}},
   {name:"Chase", title:"Øvet", min:150, e:"⭐",
    look:{skin:"#f6d2ad", shirt:"#3d9bff", pants:"#1d2742", hat:"none", hairStyle:"short", hairCol:"#f1cf6e"}},
   {name:"Onkel A", title:"Det bedste", min:300, e:"👑",
-   look:{skin:"#f6d2ad", shirt:"#ffc22e", pants:"#1d2742", hat:"crown", hairStyle:"short", hairCol:"#5a3b25", glasses:true}},
+   look:{skin:"#f2c2a2", shirt:"#d7ef3a", pants:"#2b3a67", hat:"flower", hairStyle:"short", hairCol:"#8a5a35", beard:true, beardCol:"#b08052"}},
+];
+// Figurer man kan vælge fra start (uden for rangstigen)
+const FREE_FIGS = [
+  {name:"Viga", title:"Fra start", look:{skin:"#f6d5bd", shirt:"#a8896b", pants:"#3d4f7a", hat:"none", hairStyle:"long", hairCol:"#ecd08a"}},
 ];
 function rankIdx(stars){ const t = stars === undefined ? totalStars() : stars; let i = 0; RANKS.forEach((r,k) => { if (t >= r.min) i = k; }); return i; }
 function rankPortrait(L, size=72){
@@ -2679,9 +2700,11 @@ function rankPortrait(L, size=72){
   const top = L.hairStyle && L.hairStyle !== "none" ? `<rect x="22" y="18" width="56" height="16" rx="4" fill="${hc}"/>` : "";
   const bun = L.hairStyle === "bun" ? `<rect x="40" y="6" width="20" height="16" rx="5" fill="${hc}"/>` : "";
   const hat = L.hat === "crown" ? `<path d="M26 22 L30 6 L40 16 L50 2 L60 16 L70 6 L74 22Z" fill="#ffc22e" stroke="${ink}" stroke-width="2"/>`
+    : L.hat === "student" ? `<rect x="20" y="12" width="60" height="16" rx="3" fill="#fbfbf7" stroke="#1d2742" stroke-width="2"/><rect x="20" y="24" width="60" height="6" fill="#1f2f6b"/><rect x="34" y="28" width="32" height="5" rx="2" fill="#14141a"/>`
+    : L.hat === "flower" ? `<path d="M22 30 Q50 6 78 30" fill="none" stroke="#3d9bff" stroke-width="5"/><circle cx="36" cy="16" r="11" fill="#ffd23f"/><circle cx="36" cy="16" r="8.5" fill="#9b3fd0"/><circle cx="36" cy="16" r="5" fill="#7fd3f0"/><circle cx="36" cy="16" r="2" fill="#e8436a"/>`
     : L.hat === "cap" ? `<rect x="22" y="12" width="56" height="14" rx="4" fill="${L.shirt}"/><rect x="50" y="22" width="34" height="6" rx="3" fill="${L.shirt}"/>` : "";
   const glasses = L.glasses ? `<g fill="#bfe6f5" stroke="${ink}" stroke-width="2.5"><rect x="28" y="42" width="18" height="13" rx="3"/><rect x="54" y="42" width="18" height="13" rx="3"/></g><path d="M46 47 L54 47" stroke="${ink}" stroke-width="2.5"/>` : "";
-  const beard = L.beard ? `<path d="M28 62 L72 62 L68 80 L32 80Z" fill="${hc}"/>` : "";
+  const beard = L.beard ? `<path d="M24 66 L30 66 L34 74 L66 74 L70 66 L76 66 L72 82 L28 82Z" fill="${L.beardCol || hc}"/><rect x="38" y="62" width="24" height="3" rx="1.5" fill="${L.beardCol || hc}"/>` : "";
   return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true" style="flex:none">
     <circle cx="50" cy="50" r="48" fill="${L.shirt}" opacity=".25"/>${hair}${bun}
     <rect x="22" y="26" width="56" height="56" rx="6" fill="${L.skin}" stroke="${ink}" stroke-width="2"/>${top}

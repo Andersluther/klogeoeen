@@ -919,7 +919,7 @@ function renderTop(){
   $("#pname").textContent = S.name || "Spiller";
   $("#starCount").textContent = totalStars();
   $("#coinCount").textContent = S.coins || 0;
-  $("#rankName").textContent = `${RANKS[rankIdx()].title} · ${RANKS[rankIdx()].name}`;
+  $("#rankName").textContent = `${RANKS[rankIdx()].name} · ${RANKS[rankIdx()].title}`;
   const bk = Object.keys(S.prog).filter(k => k.startsWith("blok-"));
   $("#wmeta").innerHTML = `<span><span class="star">★</span> ${bk.reduce((a,k)=>a+S.prog[k],0)} i Blokverdenen</span><span>Bane ${bk.length}/${Math.max(S.obby||1, bk.length)} klaret</span>`;
   $("#soundBtn").textContent = S.sound ? "🔊 Lyd" : "🔇 Lyd";
@@ -2758,15 +2758,15 @@ function rankUpHTML(starsBefore){
   const r = RANKS[b];
   setTimeout(() => confetti(220), 400);
   return `<div class="newstick" style="display:flex;gap:12px;align-items:center;text-align:left">${rankPortrait(r.look, 64)}
-    <span>Ny rang: <b style="font-size:20px;display:inline">${r.title}</b><br>Du kan nu blive <b style="font-size:16px;display:inline">${r.name}</b> i Blokverdenen under 🎨 Figur.</span></div>`;
+    <span>Ny rang: <b style="font-size:20px;display:inline">${r.name}</b> (${r.title.toLowerCase()})<br>Du kan nu blive ${r.name} i Blokverdenen under 🎨 Figur.</span></div>`;
 }
 function showRanks(){
   const t = totalStars(), cur = rankIdx(), next = RANKS[cur + 1];
   openModal(`<h2>Rangering</h2>
-    <p style="margin:0">Du har <b>${t} ★</b>.${next ? ` ${next.min - t} ★ mere til <b>${next.title}</b>.` : " Du har nået toppen!"}</p>
+    <p style="margin:0">Du har <b>${t} ★</b>.${next ? ` ${next.min - t} ★ mere til <b>${next.name}</b> (${next.title.toLowerCase()}).` : " Du har nået toppen!"}</p>
     ${next ? `<div class="progress"><i style="width:${Math.round((t - RANKS[cur].min) / (next.min - RANKS[cur].min) * 100)}%"></i></div>` : ""}
     <div class="items" style="text-align:left">${RANKS.map((r,i) => `<div class="it" style="${i === cur ? "outline:4px solid var(--grape);outline-offset:2px" : ""}${i > cur ? ";opacity:.6" : ""}">
-      <span style="display:flex;gap:10px;align-items:center">${rankPortrait(r.look, 52)}<span><b>${r.e} ${r.title}</b><small>${r.name} · fra ${r.min} ★</small></span></span>
+      <span style="display:flex;gap:10px;align-items:center">${rankPortrait(r.look, 52)}<span><b>${r.e} ${r.name}</b><small>${r.title} · fra ${r.min} ★</small></span></span>
       <span>${i <= cur ? "✅" : "🔒"}</span></div>`).join("")}</div>
     <p style="margin:0;font-size:14px;color:var(--ink-soft)">Stjerner fra alle spil tæller. Hver ny rang giver en ny figur i Blokverdenen.</p>
     <div class="row"><button class="btn main" id="closeM">Luk</button></div>`);

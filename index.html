@@ -361,6 +361,7 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
       <button class="chip" id="profileBtn" aria-label="Skift navn og figur"><span class="av" id="avatar">🦊</span><span id="pname">Spiller</span></button>
       <button class="chip" id="albumBtn" aria-label="Se klistermærker"><span class="star">★</span><span id="starCount">0</span></button>
       <span class="chip" aria-label="Mønter">🪙 <span id="coinCount">0</span></span>
+      <button class="chip" id="rankBtn" aria-label="Se rangering">🏅 <span id="rankName">Begynder</span></button>
       <button class="chip" id="themeBtn" aria-label="Vælg tema">🌈 Tema</button>
       <button class="chip" id="soundBtn" aria-label="Lyd til og fra">🔊 Lyd</button>
     </div>
@@ -918,6 +919,7 @@ function renderTop(){
   $("#pname").textContent = S.name || "Spiller";
   $("#starCount").textContent = totalStars();
   $("#coinCount").textContent = S.coins || 0;
+  $("#rankName").textContent = `${RANKS[rankIdx()].title} · ${RANKS[rankIdx()].name}`;
   const bk = Object.keys(S.prog).filter(k => k.startsWith("blok-"));
   $("#wmeta").innerHTML = `<span><span class="star">★</span> ${bk.reduce((a,k)=>a+S.prog[k],0)} i Blokverdenen</span><span>Bane ${bk.length}/${Math.max(S.obby||1, bk.length)} klaret</span>`;
   $("#soundBtn").textContent = S.sound ? "🔊 Lyd" : "🔇 Lyd";
@@ -1032,7 +1034,7 @@ $("#backBtn").onclick = () => { stopGame(); renderMap(); show("mapView"); };
 function finish(stars, line){
   stopGame();
   const k = pkey(cur.s,cur.b,cur.d);
-  const before = Math.min(STICKERS.length, Math.floor(totalStars()/5));
+  const before = Math.min(STICKERS.length, Math.floor(totalStars()/5)), starsBefore = totalStars();
   const prev = S.prog[k] || 0;
   S.prog[k] = Math.max(prev, stars);
   save();
@@ -1055,6 +1057,7 @@ function finish(stars, line){
     ${stars === 0 ? `<p style="margin:0;color:var(--ink-soft)">Du skal have mindst 1 ★ for at låse næste bane op.</p>` : ""}
     ${unlockLine}
     ${earned ? `<p style="margin:0;font-size:17px">+${earned} 🪙 til Blokverdenen</p>` : ""}
+    ${rankUpHTML(starsBefore)}
     ${fresh.length ? `<div class="newstick">Nyt klistermærke!<b>${fresh.join(" ")}</b></div>` : nextStickerHTML()}
     <div class="row">
       ${hasNext ? `<button class="btn main" id="nextL">Næste bane ▶</button>` : ""}
@@ -1749,7 +1752,18 @@ function makeAvatar(L){
   part(.56,.56,.56, 0,1.88,0, L.skin);
   part(.09,.12,.02, -.12,1.94,.29, "#1d2742"); part(.09,.12,.02, .12,1.94,.29, "#1d2742");
   part(.22,.05,.02, 0,1.77,.29, "#1d2742");
-  const top = 2.16;
+  const hc = L.hairCol || "#5a3b25";
+  if (L.hairStyle && L.hairStyle !== "none"){
+    part(.6,.14,.6, 0,2.21,0, hc);
+    part(.6,.42,.12, 0,1.98,-.26, hc);
+    if (L.hairStyle === "long"){ part(.64,.8,.14, 0,1.74,-.28, hc); part(.1,.56,.5, -.31,1.86,-.02, hc); part(.1,.56,.5, .31,1.86,-.02, hc); }
+    if (L.hairStyle === "bun") part(.26,.24,.26, 0,2.38,-.12, hc);
+    if (L.hairStyle === "short") { part(.1,.22,.44, -.31,2.02,-.04, hc); part(.1,.22,.44, .31,2.02,-.04, hc); }
+  }
+  if (L.glasses){ part(.2,.15,.03, -.13,1.94,.3, "#1d2742"); part(.2,.15,.03, .13,1.94,.3, "#1d2742"); part(.08,.03,.03, 0,1.95,.3, "#1d2742");
+    part(.14,.09,.035, -.13,1.94,.305, "#bfe6f5"); part(.14,.09,.035, .13,1.94,.305, "#bfe6f5"); }
+  if (L.beard){ part(.56,.2,.08, 0,1.7,.27, hc); part(.3,.08,.08, 0,1.82,.29, hc); }
+  const top = L.hairStyle && L.hairStyle !== "none" ? 2.27 : 2.16;
   A.prop = null;
   if (L.hat === "cap"){ part(.6,.16,.6, 0,top+.04,0, L.shirt); part(.6,.06,.32, 0,top-.02,.42, L.shirt); }
   if (L.hat === "crown"){ part(.6,.16,.6, 0,top+.04,0, "#ffc22e"); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b]) => part(.12,.16,.12, a*.24,top+.2,b*.24, "#ffc22e")); part(.1,.1,.03, 0,top+.06,.31, "#e8432f"); }
@@ -2001,7 +2015,7 @@ function askGate(){
 function stageDone(){
   W.done = true; W.keys = {}; W.joy = {x:0,y:0}; resetJoy();
   const st = W.stage, key = `blok-1-${st}`, prev = S.prog[key] || 0, stars = stageStars();
-  const before = Math.min(STICKERS.length, Math.floor(totalStars()/5));
+  const before = Math.min(STICKERS.length, Math.floor(totalStars()/5)), starsBefore = totalStars();
   S.prog[key] = Math.max(prev, stars);
   const fresh = STICKERS.slice(before, Math.min(STICKERS.length, Math.floor(totalStars()/5)));
   const prize = prev ? 5 + stars * 2 : 20 + st * 5;
@@ -2015,6 +2029,7 @@ function stageDone(){
     <p style="margin:0;font-size:18px">Bane ${st} klaret · ${W.wrong} forkerte svar · ${W.falls} fald<br>+${prize} 🪙${stars > prev && prev ? " · Ny rekord!" : ""}</p>
     ${stars < 3 ? `<p style="margin:0;color:var(--ink-soft)">3 ★ kræver ingen forkerte svar og højst 2 fald.</p>` : ""}
     ${unlocked ? `<div class="newstick">Bane ${st+1} er låst op! 🔓</div>` : ""}
+    ${rankUpHTML(starsBefore)}
     ${fresh.length ? `<div class="newstick">Nyt klistermærke!<b>${fresh.join(" ")}</b></div>` : nextStickerHTML()}
     <div class="row"><button class="btn main" id="nextObby">Bane ${st+1} ▶</button><button class="btn" id="againObby">Prøv igen</button><button class="btn" id="shopNow">🎨 Køb ting</button></div>`, true);
   const go = s => { closeModal(); buildCourse(s); respawn(true); toast(`Bane ${s}!`); };
@@ -2040,8 +2055,12 @@ function renderShop(){
     return `<div class="it"><span>${x.name}<small>${x.desc}${own ? "" : ` · ${x.price} 🪙`}</small></span>
       <button data-ext="${x.id}" class="${own ? "on" : ""}" ${own || S.coins < x.price ? "disabled" : ""}>${own ? "Har den" : "Køb"}</button></div>`;
   };
+  const rk = rankIdx();
+  const figs = `<div><span class="lbl">Rang-figurer</span><div class="items">${RANKS.map((r,i) => `<div class="it"><span style="display:flex;gap:8px;align-items:center">${rankPortrait(r.look, 40)}<span>${r.name}<small>${r.title}${i > rk ? ` · kræver ${r.min} ★` : ""}</small></span></span>
+      <button data-fig="${i}" ${i > rk ? "disabled" : ""}>${i > rk ? "🔒" : "Bliv " + r.name}</button></div>`).join("")}</div></div>`;
   $("#shop").innerHTML = `<h3>Min figur</h3>
     <p style="margin:0;font-size:14px;color:var(--ink-soft)">Du har ${S.coins} 🪙. Tjen flere ved at klare baner i fagene (5 pr. stjerne) og i forhindringsbanen.</p>
+    ${figs}
     <div><span class="lbl">Hud</span>${sw("skin", SKINS)}</div>
     <div><span class="lbl">Trøje</span>${sw("shirt", CLOTH)}</div>
     <div><span class="lbl">Bukser</span>${sw("pants", CLOTH)}</div>
@@ -2052,7 +2071,9 @@ function renderShop(){
 }
 $("#shop").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || b.disabled) return;
-  if (b.dataset.k){ S.look[b.dataset.k] = b.dataset.v; sfx.pop(); }
+  if (b.dataset.fig !== undefined){ const r = RANKS[+b.dataset.fig]; if (+b.dataset.fig > rankIdx()) return;
+    S.look = Object.assign({}, r.look); if (!owns(S.look.hat)) S.owned.push(S.look.hat); sfx.win(); toast(`Du er nu ${r.name}!`); }
+  else if (b.dataset.k){ S.look[b.dataset.k] = b.dataset.v; sfx.pop(); }
   else if (b.dataset.hat){
     const h = HATS.find(x => x.id === b.dataset.hat);
     if (!owns(h.id)){ if (S.coins < h.price) return; S.coins -= h.price; S.owned.push(h.id); sfx.win(); confetti(80); }
@@ -2636,6 +2657,58 @@ function playStyle(stage, b, d){
   return () => timers.forEach(clearTimeout);
 }
 
+/* ================= RANGERING ================= */
+// Midlertidige figurer – rettes til efter billeder/beskrivelser af personerne.
+const RANKS = [
+  {name:"Mor", title:"Begynder", min:0, e:"🌱",
+   look:{skin:"#f6d2ad", shirt:"#ff7eb6", pants:"#3d7bff", hat:"none", hairStyle:"long", hairCol:"#7a4a2a"}},
+  {name:"Mormor", title:"Lidt øvet", min:20, e:"🌿",
+   look:{skin:"#f6d2ad", shirt:"#9b5cff", pants:"#1d2742", hat:"none", hairStyle:"short", hairCol:"#c9c9d1", glasses:true}},
+  {name:"Onkel L", title:"Middel", min:60, e:"🌳",
+   look:{skin:"#eab98c", shirt:"#2fa65a", pants:"#2b3a67", hat:"cap", hairStyle:"short", hairCol:"#3a2a1f", beard:true}},
+  {name:"Chase", title:"Øvet", min:150, e:"⭐",
+   look:{skin:"#f6d2ad", shirt:"#3d9bff", pants:"#1d2742", hat:"none", hairStyle:"short", hairCol:"#f1cf6e"}},
+  {name:"Onkel A", title:"Det bedste", min:300, e:"👑",
+   look:{skin:"#f6d2ad", shirt:"#ffc22e", pants:"#1d2742", hat:"crown", hairStyle:"short", hairCol:"#5a3b25", glasses:true}},
+];
+function rankIdx(stars){ const t = stars === undefined ? totalStars() : stars; let i = 0; RANKS.forEach((r,k) => { if (t >= r.min) i = k; }); return i; }
+function rankPortrait(L, size=72){
+  const hc = L.hairCol || "#5a3b25", ink = "#1d2742";
+  let hair = "";
+  if (L.hairStyle === "long") hair = `<rect x="18" y="22" width="64" height="62" rx="6" fill="${hc}"/>`;
+  const top = L.hairStyle && L.hairStyle !== "none" ? `<rect x="22" y="18" width="56" height="16" rx="4" fill="${hc}"/>` : "";
+  const bun = L.hairStyle === "bun" ? `<rect x="40" y="6" width="20" height="16" rx="5" fill="${hc}"/>` : "";
+  const hat = L.hat === "crown" ? `<path d="M26 22 L30 6 L40 16 L50 2 L60 16 L70 6 L74 22Z" fill="#ffc22e" stroke="${ink}" stroke-width="2"/>`
+    : L.hat === "cap" ? `<rect x="22" y="12" width="56" height="14" rx="4" fill="${L.shirt}"/><rect x="50" y="22" width="34" height="6" rx="3" fill="${L.shirt}"/>` : "";
+  const glasses = L.glasses ? `<g fill="#bfe6f5" stroke="${ink}" stroke-width="2.5"><rect x="28" y="42" width="18" height="13" rx="3"/><rect x="54" y="42" width="18" height="13" rx="3"/></g><path d="M46 47 L54 47" stroke="${ink}" stroke-width="2.5"/>` : "";
+  const beard = L.beard ? `<path d="M28 62 L72 62 L68 80 L32 80Z" fill="${hc}"/>` : "";
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true" style="flex:none">
+    <circle cx="50" cy="50" r="48" fill="${L.shirt}" opacity=".25"/>${hair}${bun}
+    <rect x="22" y="26" width="56" height="56" rx="6" fill="${L.skin}" stroke="${ink}" stroke-width="2"/>${top}
+    <rect x="34" y="45" width="7" height="9" rx="2" fill="${ink}"/><rect x="59" y="45" width="7" height="9" rx="2" fill="${ink}"/>
+    ${beard}<rect x="40" y="66" width="20" height="4" rx="2" fill="${ink}"/>${glasses}${hat}</svg>`;
+}
+function rankUpHTML(starsBefore){
+  const a = rankIdx(starsBefore), b = rankIdx();
+  if (b <= a) return "";
+  const r = RANKS[b];
+  setTimeout(() => confetti(220), 400);
+  return `<div class="newstick" style="display:flex;gap:12px;align-items:center;text-align:left">${rankPortrait(r.look, 64)}
+    <span>Ny rang: <b style="font-size:20px;display:inline">${r.title}</b><br>Du kan nu blive <b style="font-size:16px;display:inline">${r.name}</b> i Blokverdenen under 🎨 Figur.</span></div>`;
+}
+function showRanks(){
+  const t = totalStars(), cur = rankIdx(), next = RANKS[cur + 1];
+  openModal(`<h2>Rangering</h2>
+    <p style="margin:0">Du har <b>${t} ★</b>.${next ? ` ${next.min - t} ★ mere til <b>${next.title}</b>.` : " Du har nået toppen!"}</p>
+    ${next ? `<div class="progress"><i style="width:${Math.round((t - RANKS[cur].min) / (next.min - RANKS[cur].min) * 100)}%"></i></div>` : ""}
+    <div class="items" style="text-align:left">${RANKS.map((r,i) => `<div class="it" style="${i === cur ? "outline:4px solid var(--grape);outline-offset:2px" : ""}${i > cur ? ";opacity:.6" : ""}">
+      <span style="display:flex;gap:10px;align-items:center">${rankPortrait(r.look, 52)}<span><b>${r.e} ${r.title}</b><small>${r.name} · fra ${r.min} ★</small></span></span>
+      <span>${i <= cur ? "✅" : "🔒"}</span></div>`).join("")}</div>
+    <p style="margin:0;font-size:14px;color:var(--ink-soft)">Stjerner fra alle spil tæller. Hver ny rang giver en ny figur i Blokverdenen.</p>
+    <div class="row"><button class="btn main" id="closeM">Luk</button></div>`);
+  $("#closeM").onclick = closeModal;
+}
+
 /* ================= TEMAER ================= */
 const THEMES = {
   oe:{name:"Øen", e:"🏝️", free:true, bg:"#8fd3e6", pat:"", sky:"#9fdcf0", ground:"#5cb85f", road:"#5a6275", blocks:["#ff6a55","#ffc22e","#3d9bff","#7a5cff","#ff7eb6","#17b3a3"]},
@@ -2673,6 +2746,7 @@ function showThemes(){
 
 /* ================= start ================= */
 $("#themeBtn").onclick = () => { sfx.pop(); showThemes(); };
+$("#rankBtn").onclick = () => { sfx.pop(); showRanks(); };
 applyTheme();
 renderHub();
 if (!S.name) showProfile();

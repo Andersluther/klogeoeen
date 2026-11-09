@@ -1740,7 +1740,30 @@ function initWorld(){
   addEventListener("resize", resizeWorld);
 }
 
+function makeDog(L){
+  const T = THREE, A = {dog:true}, g = new T.Group(), M = c => new T.MeshLambertMaterial({color:c});
+  const fur = L.fur || "#d98c45", cream = L.cream || "#f6e3c4";
+  const part = (w,h,d,x,y,z,c,parent=g) => { const m = new T.Mesh(new T.BoxGeometry(w,h,d), M(c)); m.position.set(x,y,z); parent.add(m); return m; };
+  const leg = (x, z) => { const pv = new T.Group(); pv.position.set(x,.55,z); g.add(pv); part(.2,.5,.2, 0,-.25,0, fur, pv); part(.22,.1,.24, 0,-.5,.02, cream, pv); return pv; };
+  part(.72,.6,1.3, 0,.82,0, fur);
+  part(.6,.42,.3, 0,.8,.56, cream);
+  part(.56,.12,1.0, 0,.53,0, cream);
+  A.armL = leg(-.22,.42); A.armR = leg(.22,.42); A.legL = leg(-.22,-.42); A.legR = leg(.22,-.42);
+  const head = new T.Group(); head.position.set(0,1.32,.66); g.add(head);
+  part(.6,.54,.54, 0,0,0, fur, head);
+  part(.5,.24,.26, 0,-.13,.3, cream, head);
+  part(.2,.1,.08, -.18,.02,.27, cream, head); part(.2,.1,.08, .18,.02,.27, cream, head);
+  part(.13,.08,.06, 0,-.05,.45, "#14141a", head);
+  part(.12,.03,.03, -.14,.09,.28, "#14141a", head); part(.12,.03,.03, .14,.09,.28, "#14141a", head);
+  part(.16,.04,.04, 0,-.2,.44, "#14141a", head); part(.1,.08,.04, 0,-.25,.44, "#ff6f8a", head);
+  [-1,1].forEach(sx => { const e = part(.16,.24,.08, sx*.19,.35,-.04, fur, head); e.rotation.z = -sx*.18; part(.08,.14,.04, sx*.19,.33,0, cream, head).rotation.z = -sx*.18; });
+  part(.62,.09,.5, 0,1.06,.62, "#2a2a33");
+  part(.08,.1,.03, 0,.98,.88, "#ffc22e");
+  const tail = part(.26,.26,.36, 0,1.2,-.62, fur); tail.rotation.x = -.6; part(.16,.16,.2, 0,1.36,-.52, cream);
+  A.g = g; A.prop = null; return A;
+}
 function makeAvatar(L){
+  if (L.kind === "dog") return makeDog(L);
   const T = THREE, A = {};
   const g = new T.Group(), M = c => new T.MeshLambertMaterial({color:c});
   const part = (w,h,d,x,y,z,c,parent=g) => { const m = new T.Mesh(new T.BoxGeometry(w,h,d), M(c)); m.position.set(x,y,z); parent.add(m); return m; };
@@ -1793,7 +1816,7 @@ function makeAvatar(L){
 function buildAvatar(){
   if (W.avatar) W.scene.remove(W.avatar);
   const A = makeAvatar(S.look);
-  Object.assign(W, {avatar:A.g, legL:A.legL, legR:A.legR, armL:A.armL, armR:A.armR, prop:A.prop});
+  Object.assign(W, {avatar:A.g, legL:A.legL, legR:A.legR, armL:A.armL, armR:A.armR, prop:A.prop, isDog:!!A.dog});
   W.scene.add(A.g);
 }
 
@@ -1965,7 +1988,7 @@ function animate(dt){
   W.walk += dt * (W.moving && W.grounded ? 11 : 0);
   const sw = W.moving && W.grounded ? Math.sin(W.walk) * .7 : W.grounded ? 0 : -.5;
   W.legL.rotation.x = sw; W.legR.rotation.x = W.grounded ? -sw : .4;
-  W.armL.rotation.x = W.grounded ? -sw : -2.6; W.armR.rotation.x = W.grounded ? sw : -2.6;
+  W.armL.rotation.x = W.grounded ? -sw : (W.isDog ? -.7 : -2.6); W.armR.rotation.x = W.grounded ? sw : (W.isDog ? -.7 : -2.6);
   if (W.prop) W.prop.rotation.y += dt * 14;
   for (const m of W.coins) m.rotation.z += dt * 3;
   if (W.cup) W.cup.rotation.y += dt;
@@ -2684,7 +2707,7 @@ const RANKS = [
   {name:"Onkel L", title:"Middel", min:60, e:"🌳",
    look:{skin:"#f6d2b8", shirt:"#ece3cf", pants:"#ece3cf", hat:"student", hairStyle:"short", hairCol:"#9a7350", glasses:true}},
   {name:"Chase", title:"Øvet", min:150, e:"⭐",
-   look:{skin:"#f6d2ad", shirt:"#3d9bff", pants:"#1d2742", hat:"none", hairStyle:"short", hairCol:"#f1cf6e"}},
+   look:{kind:"dog", fur:"#d98c45", cream:"#f6e3c4", skin:"#d98c45", shirt:"#d98c45", pants:"#d98c45", hat:"none"}},
   {name:"Onkel A", title:"Det bedste", min:300, e:"👑",
    look:{skin:"#f2c2a2", shirt:"#d7ef3a", pants:"#2b3a67", hat:"flower", hairStyle:"short", hairCol:"#8a5a35", beard:true, beardCol:"#b08052"}},
 ];
@@ -2694,6 +2717,19 @@ const FREE_FIGS = [
 ];
 function rankIdx(stars){ const t = stars === undefined ? totalStars() : stars; let i = 0; RANKS.forEach((r,k) => { if (t >= r.min) i = k; }); return i; }
 function rankPortrait(L, size=72){
+  if (L.kind === "dog"){
+    const f = L.fur || "#d98c45", c = L.cream || "#f6e3c4", ink = "#1d2742";
+    return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true" style="flex:none">
+      <circle cx="50" cy="50" r="48" fill="${f}" opacity=".25"/>
+      <path d="M22 40 L28 10 L44 28Z" fill="${f}" stroke="${ink}" stroke-width="2"/><path d="M78 40 L72 10 L56 28Z" fill="${f}" stroke="${ink}" stroke-width="2"/>
+      <path d="M28 34 L30 18 L38 28Z" fill="${c}"/><path d="M72 34 L70 18 L62 28Z" fill="${c}"/>
+      <rect x="20" y="26" width="60" height="54" rx="10" fill="${f}" stroke="${ink}" stroke-width="2"/>
+      <path d="M22 56 Q50 44 78 56 L74 76 Q50 86 26 76Z" fill="${c}"/>
+      <path d="M32 46 Q37 42 42 46" stroke="${ink}" stroke-width="3" fill="none"/><path d="M58 46 Q63 42 68 46" stroke="${ink}" stroke-width="3" fill="none"/>
+      <rect x="44" y="54" width="12" height="8" rx="3" fill="${ink}"/>
+      <path d="M40 66 Q50 74 60 66" stroke="${ink}" stroke-width="2.5" fill="none"/><path d="M46 69 Q50 78 54 69Z" fill="#ff6f8a"/>
+    </svg>`;
+  }
   const hc = L.hairCol || "#5a3b25", ink = "#1d2742";
   let hair = "";
   if (L.hairStyle === "long") hair = `<rect x="18" y="22" width="64" height="62" rx="6" fill="${hc}"/>`;

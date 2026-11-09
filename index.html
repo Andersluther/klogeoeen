@@ -1786,6 +1786,7 @@ function makeAvatar(L){
   const limb = (x, y, w, h, c) => { const pv = new T.Group(); pv.position.set(x,y,0); g.add(pv); part(w,h,w, 0,-h/2,0, c, pv); return pv; };
   A.legL = limb(-.2, .8, .36, .8, L.pants); A.legR = limb(.2, .8, .36, .8, L.pants);
   part(.8,.8,.42, 0,1.2,0, L.shirt);
+  if (L.flowers) [[-.24,1.42],[.16,1.5],[-.06,1.22],[.26,1.1],[-.28,.98],[.06,.94]].forEach(([fx,fy],k) => part(.09,.09,.02, fx,fy,.215, k%2 ? "#ff8fb3" : "#f4f1ea"));
   A.armL = limb(-.58, 1.55, .3, .75, L.skin); A.armR = limb(.58, 1.55, .3, .75, L.skin);
   part(.3,.22,.32, -.58,1.48,0, L.shirt); part(.3,.22,.32, .58,1.48,0, L.shirt);
   part(.56,.56,.56, 0,1.88,0, L.skin);
@@ -2758,6 +2759,8 @@ const RANKS = [
    look:{kind:"dog", fur:"#d98c45", cream:"#f6e3c4", skin:"#d98c45", shirt:"#d98c45", pants:"#d98c45", hat:"none"}},
   {name:"Onkel A", title:"Det bedste", min:500, e:"👑",
    look:{skin:"#f2c2a2", shirt:"#d7ef3a", pants:"#2b3a67", hat:"flower", hairStyle:"short", hairCol:"#8a5a35", beard:true, beardCol:"#b08052"}},
+  {name:"Mester Viga", title:"Mester", min:1000, e:"🏆",
+   look:{skin:"#f6d5bd", shirt:"#353c55", pants:"#4a2f28", hat:"crown", hairStyle:"long", hairCol:"#ecd08a", flowers:true}},
 ];
 // Figurer man kan vælge fra start (uden for rangstigen)
 const FREE_FIGS = [

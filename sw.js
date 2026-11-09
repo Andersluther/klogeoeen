@@ -1,5 +1,5 @@
-// Klogeøen service worker: virker offline og henter nye versioner i baggrunden.
-const CACHE = "klogeoeen-79e413fdc1";
+// Onkel A's Ø service worker: virker offline og henter nye versioner i baggrunden.
+const CACHE = "klogeoeen-fbdf42a678";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -13,7 +13,7 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  const ok = url.origin === location.origin || url.hostname.endsWith("googleapis.com") || url.hostname.endsWith("gstatic.com");
+  const ok = url.origin === location.origin || url.hostname === "cdnjs.cloudflare.com" || url.hostname.endsWith("googleapis.com") || url.hostname.endsWith("gstatic.com");
   if (!ok) return;
   e.respondWith(caches.open(CACHE).then(async cache => {
     const hit = await cache.match(req, {ignoreSearch: url.origin === location.origin});

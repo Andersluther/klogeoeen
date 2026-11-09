@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Klogeøen">
+<meta name="apple-mobile-web-app-title" content="Onkel A's Ø">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -20,7 +20,7 @@ img{max-width:100%}
 html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 button{touch-action:manipulation}
 </style>
-<title>Klogeøen</title>
+<title>Onkel A's Ø</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;800;900&display=swap">
@@ -207,6 +207,48 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .bin.ok{background:var(--good);color:#fff}
 .bin.no{background:var(--bad);color:#fff}
 
+/* blokverden: kort på hub */
+.worldcard{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;align-items:center;border:3px solid var(--ink);border-radius:26px;padding:18px;
+  background:linear-gradient(135deg,#4f7dff,#7a5cff 60%,#b45cff);box-shadow:var(--shadow);color:var(--paper)}
+.worldcard .art{background:var(--sun)}
+.worldcard h2{font-size:clamp(26px,4vw,34px)}
+.worldcard p{margin:4px 0 12px;font-weight:700;font-size:15px;line-height:1.35}
+.worldcard .row{justify-content:flex-start}
+.worldcard .new{display:inline-block;background:var(--sun);color:var(--ink);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:13px;text-transform:uppercase;letter-spacing:1.4px}
+
+/* blokverden: 3D-visning */
+#world{position:fixed;inset:0;z-index:40;background:#9fdcf0;overflow:hidden}
+#worldCanvas,#worldCanvas canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hud{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.hud > *{pointer-events:auto}
+.hud .grp{display:flex;flex-wrap:wrap;gap:8px}
+.keyhint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);background:#1d2742cc;color:var(--paper);border-radius:999px;padding:6px 14px;font-size:13px;white-space:nowrap;pointer-events:none}
+.joy{position:absolute;left:calc(max(16px,env(safe-area-inset-left,0px)) + 6px);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:132px;height:132px;border-radius:50%;
+  background:#ffffff40;border:3px solid #ffffffcc;touch-action:none}
+.joy i{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);pointer-events:none}
+.jumpbtn{position:absolute;right:calc(max(16px,env(safe-area-inset-right,0px)) + 6px);bottom:calc(env(safe-area-inset-bottom,0px) + 34px);width:100px;height:100px;border-radius:50%;
+  background:var(--sun);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);font-family:var(--display);font-size:22px;touch-action:none}
+.jumpbtn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+@media (hover:hover) and (pointer:fine){ .joy,.jumpbtn{display:none} }
+@media (hover:none),(pointer:coarse){ .keyhint{display:none} }
+.toast{position:absolute;left:50%;top:22%;transform:translate(-50%,-50%);font-family:var(--display);font-size:clamp(26px,6vw,44px);color:var(--paper);
+  -webkit-text-stroke:2px var(--ink);text-shadow:3px 3px 0 var(--ink);pointer-events:none;text-align:center;width:90%;transition:opacity .4s}
+.shop{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 64px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+  width:min(360px,calc(100% - 24px));overflow:auto;background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink);padding:16px;display:flex;flex-direction:column;gap:14px}
+.shop h3{font-size:24px}
+.shop .lbl{display:block;margin-bottom:6px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:36px;height:36px;border-radius:10px;border:3px solid var(--ink);padding:0}
+.sw[aria-pressed="true"]{outline:4px solid var(--grape);outline-offset:2px}
+.items{display:flex;flex-direction:column;gap:8px}
+.it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border:2px solid var(--ink);border-radius:12px;padding:8px 10px;background:#fff;font-size:15px}
+.it small{display:block;font-weight:600;color:var(--ink-soft)}
+.it button{border:3px solid var(--ink);border-radius:10px;background:var(--sun);padding:6px 10px;font-size:14px;white-space:nowrap}
+.it button:disabled{background:var(--lock);cursor:default}
+.it button.on{background:var(--good);color:#fff}
+@media (max-width:560px){ .shop{top:auto;height:52%} }
+
 /* modal */
 .veil{position:fixed;inset:0;background:#1d2742aa;display:grid;place-items:center;padding:16px;z-index:50}
 .modal{background:var(--paper);border:3px solid var(--ink);border-radius:26px;box-shadow:8px 8px 0 var(--ink);padding:24px;width:min(520px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:16px;text-align:center}
@@ -250,16 +292,26 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 <canvas id="confetti"></canvas>
 <div class="wrap">
   <header class="top">
-    <h1>Klogeøen</h1>
+    <h1>Onkel A's Ø</h1>
     <div class="chips">
       <button class="chip" id="profileBtn" aria-label="Skift navn og figur"><span class="av" id="avatar">🦊</span><span id="pname">Spiller</span></button>
       <button class="chip" id="albumBtn" aria-label="Se klistermærker"><span class="star">★</span><span id="starCount">0</span></button>
+      <span class="chip" aria-label="Mønter">🪙 <span id="coinCount">0</span></span>
       <button class="chip" id="soundBtn" aria-label="Lyd til og fra">🔊 Lyd</button>
     </div>
   </header>
 
   <!-- HUB: ét spil pr. fag -->
   <main id="hub" class="wrap">
+    <div class="worldcard">
+      <span class="art" aria-hidden="true">🧱</span>
+      <div>
+        <span class="new">Ny · 3D</span>
+        <h2 class="outline">Blokverdenen</h2>
+        <p>Design din egen figur, løb og hop gennem forhindringsbaner, og svar rigtigt ved hvert checkpoint. Mønter fra spillene køber hatte og superkræfter.</p>
+        <div class="row"><button class="btn main" id="worldBtn">Gå ind i verdenen ▶</button><button class="btn" id="avatarBtn">🎨 Min figur</button></div>
+      </div>
+    </div>
     <div class="islands" id="islands"></div>
     <p class="tip">Vælg et fag og dit klassetrin. Hvert fag har forskellige slags spil, og hver bane du klarer, låser den næste op. Bane 10 er mesterbanen. For hver 5. stjerne får du et klistermærke til dit album.</p>
   </main>
@@ -299,6 +351,19 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
     <div class="panel stage" id="stage"></div>
   </section>
 </div>
+
+<section id="world" hidden>
+  <div id="worldCanvas"></div>
+  <div class="hud">
+    <div class="grp"><button class="chip" id="worldBack">← Til øen</button><span class="chip" id="wStage">Bane 1</span></div>
+    <div class="grp"><span class="chip">🪙 <b id="wCoins">0</b></span><button class="chip" id="shopBtn">🎨 Figur</button></div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="keyhint">WASD eller pile: gå · Mellemrum: hop · Træk med musen: drej kameraet</div>
+  <div class="joy" id="joy" aria-label="Styrepind"><i id="joyKnob"></i></div>
+  <button class="jumpbtn" id="jumpBtn">HOP</button>
+  <div class="shop" id="shop" hidden></div>
+</section>
 
 <div class="veil" id="veil" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
 
@@ -729,6 +794,7 @@ function renderTop(){
   $("#avatar").textContent = S.avatar;
   $("#pname").textContent = S.name || "Spiller";
   $("#starCount").textContent = totalStars();
+  $("#coinCount").textContent = S.coins || 0;
   $("#soundBtn").textContent = S.sound ? "🔊 Lyd" : "🔇 Lyd";
 }
 function bandOf(id){ return S.band[id] || 1; }
@@ -819,6 +885,8 @@ function finish(stars, line){
   save();
   const after = Math.min(STICKERS.length, Math.floor(totalStars()/5));
   const fresh = STICKERS.slice(before, after);
+  const earned = stars * 5;
+  S.coins = (S.coins || 0) + earned; save();
   const hasNext = cur.d < LEVELS && stars >= 1;
   const newUnlock = hasNext && prev === 0;
   if (stars >= 2 || fresh.length) { sfx.win(); confetti(stars===3?180:100); }
@@ -833,6 +901,7 @@ function finish(stars, line){
     <p style="margin:0;font-size:18px">${line}<br>Point: <b>${score}</b>${extra}</p>
     ${stars === 0 ? `<p style="margin:0;color:var(--ink-soft)">Du skal have mindst 1 ★ for at låse næste bane op.</p>` : ""}
     ${unlockLine}
+    ${earned ? `<p style="margin:0;font-size:17px">+${earned} 🪙 til Blokverdenen</p>` : ""}
     ${fresh.length ? `<div class="newstick">Nyt klistermærke!<b>${fresh.join(" ")}</b></div>` : nextStickerHTML()}
     <div class="row">
       ${hasNext ? `<button class="btn main" id="nextL">Næste bane ▶</button>` : ""}
@@ -852,9 +921,9 @@ function nextStickerHTML(){
 }
 
 /* ================= modal ================= */
-function openModal(html){ $("#modal").innerHTML = html; $("#veil").hidden = false; }
+function openModal(html, lock){ $("#modal").innerHTML = html; $("#modal").dataset.lock = lock ? "1" : ""; $("#veil").hidden = false; }
 function closeModal(){ $("#veil").hidden = true; }
-const dismissable = () => S.name && !$("#modal").querySelector("#again");
+const dismissable = () => S.name && !$("#modal").querySelector("#again") && !$("#modal").dataset.lock;
 $("#veil").addEventListener("click", e => { if (e.target.id === "veil" && dismissable()) closeModal(); });
 addEventListener("keydown", e => { if (e.key === "Escape" && !$("#veil").hidden && dismissable()) closeModal(); });
 
@@ -869,7 +938,7 @@ function showAlbum(){
 }
 function showProfile(){
   let av = S.avatar;
-  openModal(`<h2>${S.name ? "Din figur" : "Velkommen til Klogeøen!"}</h2>
+  openModal(`<h2>${S.name ? "Din figur" : "Velkommen til Onkel A's Ø!"}</h2>
     <form id="pf" style="display:flex;flex-direction:column;gap:16px">
       <label class="field" for="nameIn">Hvad hedder du?<input id="nameIn" maxlength="16" autocomplete="off" value="${esc(S.name)}" placeholder="Skriv dit navn"></label>
       <div><div style="margin-bottom:8px">Vælg din figur</div>
@@ -1363,6 +1432,446 @@ function playMemory(stage, b, d, sp){
   };
   return () => { clearInterval(iv); timers.forEach(clearTimeout); };
 }
+
+/* ================= BLOKVERDENEN (3D) ================= */
+const SKINS = ["#f6d2ad","#eab98c","#c98d5f","#9c6640","#6e4529","#ffe3c7"];
+const CLOTH = ["#ff6a55","#ffc22e","#2fa65a","#3d9bff","#7a5cff","#ff7eb6","#17b3a3","#1d2742","#fffaf0","#ff9a3c"];
+const HATS = [{id:"none",name:"Ingen hat",price:0},{id:"cap",name:"Kasket",price:0},{id:"crown",name:"Krone",price:40},
+  {id:"top",name:"Høj hat",price:60},{id:"horns",name:"Vikinghjelm",price:80},{id:"prop",name:"Propelhue",price:100}];
+const EXTRAS = [{id:"fast",name:"Lynsko",price:90,desc:"Du løber hurtigere."},{id:"dbl",name:"Dobbelthop",price:120,desc:"Hop én gang til, mens du er i luften."}];
+S.look = Object.assign({skin:SKINS[0], shirt:CLOTH[0], pants:CLOTH[7], hat:"cap"}, S.look || {});
+S.coins = S.coins || 0; S.owned = S.owned || ["none","cap"]; S.obby = S.obby || 1;
+const owns = id => S.owned.includes(id);
+const CPS = 4, GRAV = 25, JUMP = 9.5, PR = .35, PH = 2;
+let W = null;
+
+function loadThree(){
+  if (window.THREE) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+    s.onload = res; s.onerror = () => rej(new Error("three"));
+    document.head.appendChild(s);
+  });
+}
+async function enterWorld(openShop){
+  stopGame(); closeModal();
+  ["hub","mapView","play"].forEach(v => $("#"+v).hidden = true);
+  $("#world").hidden = false;
+  try { await loadThree(); }
+  catch(e){
+    $("#world").hidden = true; showHub();
+    openModal(`<h2>Ingen forbindelse</h2><p style="margin:0">Blokverdenen skal hentes fra internettet første gang. Tjek forbindelsen og prøv igen.</p><div class="row"><button class="btn main" id="closeM">OK</button></div>`);
+    $("#closeM").onclick = closeModal; return;
+  }
+  if (!W) initWorld();
+  if (W.stage !== S.obby) buildCourse(S.obby);
+  respawn(true);
+  W.running = true; W.last = 0; W.keys = {};
+  resizeWorld(); updateHud();
+  cancelAnimationFrame(W.raf); W.raf = requestAnimationFrame(loop);
+  toggleShop(!!openShop);
+  if (!openShop) toast(`Bane ${S.obby}: følg platformene mod nord!`);
+}
+function leaveWorld(then){
+  if (W){ W.running = false; cancelAnimationFrame(W.raf); W.keys = {}; }
+  toggleShop(false); closeModal();
+  $("#world").hidden = true;
+  then ? then() : showHub();
+}
+$("#worldBtn").onclick = () => { sfx.pop(); enterWorld(false); };
+$("#avatarBtn").onclick = () => { sfx.pop(); enterWorld(true); };
+$("#worldBack").onclick = () => leaveWorld();
+$("#shopBtn").onclick = () => { sfx.pop(); toggleShop($("#shop").hidden); };
+
+let toastT = 0;
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.style.opacity = 1;
+  clearTimeout(toastT); toastT = setTimeout(() => t.style.opacity = 0, 1800);
+}
+function updateHud(){
+  $("#wCoins").textContent = S.coins;
+  $("#wStage").textContent = `Bane ${S.obby} · checkpoint ${Math.max(0, W ? W.cp+1 : 0)}/${CPS}`;
+  renderTop();
+}
+function seeded(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+function textSprite(text, bg="#fffaf0", fg="#1d2742"){
+  const T = THREE, c = document.createElement("canvas"); c.width = 512; c.height = 128;
+  const x = c.getContext("2d");
+  x.fillStyle = "#1d2742"; x.beginPath(); x.roundRect ? x.roundRect(4,4,504,120,36) : x.rect(4,4,504,120); x.fill();
+  x.fillStyle = bg; x.beginPath(); x.roundRect ? x.roundRect(12,12,488,104,28) : x.rect(12,12,488,104); x.fill();
+  x.fillStyle = fg; x.font = "900 54px Nunito, system-ui, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+  x.fillText(text, 256, 68, 470);
+  const tex = new T.CanvasTexture(c); tex.minFilter = T.LinearFilter;
+  const s = new T.Sprite(new T.SpriteMaterial({map:tex, depthWrite:false})); s.scale.set(4, 1, 1); return s;
+}
+
+function initWorld(){
+  const T = THREE;
+  W = {keys:{}, colliders:[], kills:[], movers:[], coins:[], cps:[], portals:[], cp:-1, yaw:0, time:0,
+       p:new T.Vector3(0,0,4), v:new T.Vector3(), grounded:false, ground:null, dblUsed:false, jumpQ:false, joy:{x:0,y:0}, face:0, walk:0};
+  const r = new T.WebGLRenderer({antialias:true});
+  r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  $("#worldCanvas").appendChild(r.domElement);
+  const scene = new T.Scene(); scene.background = new T.Color("#9fdcf0"); scene.fog = new T.Fog("#9fdcf0", 45, 130);
+  const cam = new T.PerspectiveCamera(60, 1, .1, 400);
+  scene.add(new T.HemisphereLight("#ffffff", "#5b7a4a", .9));
+  const sun = new T.DirectionalLight("#fff3d6", .65); sun.position.set(20, 40, 10); scene.add(sun);
+  Object.assign(W, {r, scene, cam});
+  const matCache = {};
+  W.mat = c => matCache[c] || (matCache[c] = new T.MeshLambertMaterial({color:c}));
+  W.box = (w,h,d,x,y,z,color,flags={}, parent=scene) => {
+    const m = new T.Mesh(new T.BoxGeometry(w,h,d), W.mat(color)); m.position.set(x,y,z); parent.add(m);
+    const c = Object.assign({m,w,h,d}, flags); if (!flags.ghost) W.colliders.push(c); return c;
+  };
+  // hav, ø og strand
+  const sea = new T.Mesh(new T.PlaneGeometry(600,600), new T.MeshLambertMaterial({color:"#4fb0cc"}));
+  sea.rotation.x = -Math.PI/2; sea.position.y = -2; scene.add(sea);
+  W.box(34,4,34, 0,-2,0, "#5cb85f");
+  W.box(39,3.6,39, 0,-2.2,0, "#fbe4a8");
+  // træer
+  [[-12,-9],[12,-10],[-13,6],[13,7],[-6,13],[7,13.5],[-14,-2],[14,0]].forEach(([x,z]) => {
+    W.box(.9,3,.9, x,1.5,z, "#8a5a3b"); W.box(3,2.4,3, x,3.9,z, "#2f8f46", {ghost:true}); W.box(2,1.4,2, x,5.5,z, "#38a95a", {ghost:true});
+  });
+  // portaler til fagene (syd for spawn)
+  SUBJECTS.forEach((s, i) => {
+    const a = (20 + i * (140 / (SUBJECTS.length-1))) * Math.PI/180;
+    const cx = 12 * Math.cos(a), cz = 12 * Math.sin(a);
+    const tx = -Math.sin(a), tz = Math.cos(a);   // tangent
+    const col = getComputedStyle(document.documentElement).getPropertyValue(s.c.slice(4,-1)).trim() || "#7a5cff";
+    W.box(.8,4,.8, cx+tx*1.6, 2, cz+tz*1.6, col);
+    W.box(.8,4,.8, cx-tx*1.6, 2, cz-tz*1.6, col);
+    const beam = W.box(4,.8,.8, cx, 4.4, cz, col, {ghost:true}); beam.m.rotation.y = -a + Math.PI/2;
+    const glow = new T.Mesh(new T.PlaneGeometry(2.4,3.8), new T.MeshBasicMaterial({color:col, transparent:true, opacity:.55, side:T.DoubleSide}));
+    glow.position.set(cx, 1.95, cz); glow.lookAt(0, 1.95, 0); scene.add(glow);
+    const lab = textSprite(s.subj); lab.position.set(cx, 5.6, cz); scene.add(lab);
+    W.portals.push({x:cx, z:cz, id:s.id, glow});
+  });
+  const sign = textSprite("Forhindringsbane ↑", "#ffc22e"); sign.position.set(0, 3, -14); sign.scale.set(5,1.25,1); scene.add(sign);
+  W.box(.3,2,.3, 0,1,-14, "#8a5a3b", {ghost:true});
+  // skygge og figur
+  W.shadow = new T.Mesh(new T.CircleGeometry(.45, 20), new T.MeshBasicMaterial({color:"#000", transparent:true, opacity:.25, depthWrite:false}));
+  W.shadow.rotation.x = -Math.PI/2; scene.add(W.shadow);
+  buildAvatar();
+  buildCourse(S.obby);
+  setupWorldInput();
+  addEventListener("resize", resizeWorld);
+}
+
+function buildAvatar(){
+  const T = THREE, L = S.look;
+  if (W.avatar) W.scene.remove(W.avatar);
+  const g = new T.Group(), M = c => new T.MeshLambertMaterial({color:c});
+  const part = (w,h,d,x,y,z,c,parent=g) => { const m = new T.Mesh(new T.BoxGeometry(w,h,d), M(c)); m.position.set(x,y,z); parent.add(m); return m; };
+  const limb = (x, y, w, h, c) => { const pv = new T.Group(); pv.position.set(x,y,0); g.add(pv); part(w,h,w, 0,-h/2,0, c, pv); return pv; };
+  W.legL = limb(-.2, .8, .36, .8, L.pants); W.legR = limb(.2, .8, .36, .8, L.pants);
+  part(.8,.8,.42, 0,1.2,0, L.shirt);
+  W.armL = limb(-.58, 1.55, .3, .75, L.skin); W.armR = limb(.58, 1.55, .3, .75, L.skin);
+  part(.3,.22,.32, -.58,1.48,0, L.shirt); part(.3,.22,.32, .58,1.48,0, L.shirt);
+  part(.56,.56,.56, 0,1.88,0, L.skin);
+  part(.09,.12,.02, -.12,1.94,.29, "#1d2742"); part(.09,.12,.02, .12,1.94,.29, "#1d2742");
+  part(.22,.05,.02, 0,1.77,.29, "#1d2742");
+  const top = 2.16;
+  W.prop = null;
+  if (L.hat === "cap"){ part(.6,.16,.6, 0,top+.04,0, L.shirt); part(.6,.06,.32, 0,top-.02,.42, L.shirt); }
+  if (L.hat === "crown"){ part(.6,.16,.6, 0,top+.04,0, "#ffc22e"); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b]) => part(.12,.16,.12, a*.24,top+.2,b*.24, "#ffc22e")); part(.1,.1,.03, 0,top+.06,.31, "#e8432f"); }
+  if (L.hat === "top"){ const m = new T.Mesh(new T.CylinderGeometry(.27,.27,.55,16), M("#1d2742")); m.position.set(0,top+.3,0); g.add(m);
+    const b = new T.Mesh(new T.CylinderGeometry(.42,.42,.05,16), M("#1d2742")); b.position.set(0,top+.03,0); g.add(b); part(.56,.08,.56, 0,top+.1,0, "#e8432f"); }
+  if (L.hat === "horns"){ part(.62,.24,.62, 0,top+.06,0, "#9aa3b5");
+    [-1,1].forEach(sx => { const h = new T.Mesh(new T.ConeGeometry(.09,.4,10), M("#fffaf0")); h.position.set(sx*.38,top+.22,0); h.rotation.z = -sx*.7; g.add(h); }); }
+  if (L.hat === "prop"){ part(.6,.16,.6, 0,top+.04,0, "#3d9bff"); part(.05,.25,.05, 0,top+.24,0, "#1d2742");
+    W.prop = new T.Group(); W.prop.position.set(0,top+.37,0); g.add(W.prop); part(.9,.03,.12, 0,0,0, "#ffc22e", W.prop); part(.12,.03,.9, 0,0,0, "#ff6a55", W.prop); }
+  W.avatar = g; W.scene.add(g);
+}
+
+function buildCourse(stage){
+  const T = THREE;
+  if (W.course){ W.scene.remove(W.course); W.colliders = W.colliders.filter(c => !c.course); }
+  W.kills = []; W.movers = []; W.coins = []; W.cps = []; W.cp = -1; W.done = false; W.stage = stage;
+  const g = new T.Group(); W.course = g; W.scene.add(g);
+  const R = seeded(stage * 7919 + 3);
+  const COLORS = ["#ff6a55","#ffc22e","#3d9bff","#7a5cff","#ff7eb6","#17b3a3","#ff9a3c"];
+  const per = Math.min(8, 4 + stage), gapMax = Math.min(2.6, 1.3 + stage * .25);
+  let x = 0, y = 0, z = -17.5, prevHalf = 0, n = 0;
+  const add = (w,h,d,px,py,pz,color,flags={}) => W.box(w,h,d,px,py,pz,color,Object.assign({course:true}, flags), g);
+  const place = (d, rise) => { const gap = 1.2 + R() * (gapMax - 1.2); z -= prevHalf + gap + d/2; x = Math.max(-9, Math.min(9, x + (R() - .5) * 3.5)); y += rise; prevHalf = d/2; };
+  const coin = (cx, cy, cz) => { const m = new T.Mesh(new T.CylinderGeometry(.35,.35,.1,18), W.mat("#ffc22e")); m.rotation.x = Math.PI/2; m.position.set(cx,cy,cz); g.add(m); W.coins.push(m); };
+  for (let cp = 0; cp < CPS; cp++){
+    for (let k = 0; k < per; k++){
+      const r = R();
+      let kind = "plain";
+      if (stage >= 2 && r < .18) kind = "mover"; else if (stage >= 2 && r < .34) kind = "kill"; else if (stage >= 3 && r < .46) kind = "beam";
+      const w = kind === "beam" ? 1.1 : 3, d = kind === "beam" ? 5 : 3;
+      place(d, R() < .3 ? 0 : .3 + R() * .6);
+      const c = add(w, .6, d, x, y - .3, z, COLORS[n++ % COLORS.length]);
+      if (kind === "mover"){ c.mover = {bx:x, amp:2 + R() * 1.2, sp:.9 + R() * .6 + stage * .05, ph:R() * 6, dx:0}; W.movers.push(c); }
+      else coin(x, y + 1.3, z);
+      if (kind === "kill"){
+        const kc = add(w + .02, .25, .5, x, y + .125, z, "#ff2d1f", {ghost:true});
+        kc.m.material = new T.MeshBasicMaterial({color:"#ff2d1f"}); W.kills.push(kc);
+      }
+    }
+    place(5, .3);
+    add(5, .6, 5, x, y - .3, z, "#2fa65a", {cp});
+    add(.15, 2.6, .15, x + 2, y + 1.3, z - 2, "#fffaf0", {ghost:true});
+    add(.9, .6, .06, x + 2.45, y + 2.3, z - 2, "#ffc22e", {ghost:true});
+    const lab = textSprite(`Checkpoint ${cp+1}`, "#2fa65a", "#fffaf0"); lab.position.set(x, y + 3.2, z); lab.scale.set(3.2,.8,1); g.add(lab);
+    W.cps.push({x, y, z});
+  }
+  place(6, .5);
+  add(6, .6, 6, x, y - .3, z, "#ffc22e", {trophy:true});
+  const cup = new T.Group(); cup.position.set(x, y, z); g.add(cup);
+  const gold = W.mat("#ffc22e");
+  const c1 = new T.Mesh(new T.CylinderGeometry(.8,.4,1.2,16), gold); c1.position.y = 2.1; cup.add(c1);
+  const c2 = new T.Mesh(new T.CylinderGeometry(.15,.15,.8,8), gold); c2.position.y = 1.1; cup.add(c2);
+  const c3 = new T.Mesh(new T.BoxGeometry(1.2,.4,1.2), W.mat("#1d2742")); c3.position.y = .7; cup.add(c3);
+  W.cup = cup;
+  const lab = textSprite("Mål!", "#ffc22e"); lab.position.set(x, y + 4.2, z); lab.scale.set(3,.75,1); g.add(lab);
+  updateHud();
+}
+
+function respawn(home){
+  const T = THREE;
+  if (home || W.cp < 0){ W.p.set(0, 0, -4); W.yaw = 0; W.face = Math.PI; }
+  else { const c = W.cps[W.cp]; W.p.set(c.x, c.y + .05, c.z + 1); }
+  W.v.set(0,0,0); W.ground = null; W.grounded = false; W.snap = true;
+  if (W.avatar) W.avatar.rotation.y = W.face;
+}
+
+function resizeWorld(){
+  if (!W || $("#world").hidden) return;
+  const w = innerWidth, h = innerHeight;
+  W.r.setSize(w, h, false); W.cam.aspect = w / h; W.cam.updateProjectionMatrix();
+}
+
+function setupWorldInput(){
+  const K = {ArrowUp:"f", KeyW:"f", ArrowDown:"b", KeyS:"b", ArrowLeft:"l", KeyA:"l", ArrowRight:"r", KeyD:"r", KeyQ:"rl", KeyE:"rr"};
+  addEventListener("keydown", e => {
+    if (!W.running || e.target.tagName === "INPUT" || !$("#veil").hidden) return;
+    if (e.code === "Space"){ W.jumpQ = true; e.preventDefault(); return; }
+    if (K[e.code]){ W.keys[K[e.code]] = true; e.preventDefault(); }
+  });
+  addEventListener("keyup", e => { if (W && K[e.code]) W.keys[K[e.code]] = false; });
+  addEventListener("blur", () => { if (W) W.keys = {}; });
+  // styrepind
+  const joy = $("#joy"), knob = $("#joyKnob");
+  let jid = null;
+  const joyMove = e => {
+    const b = joy.getBoundingClientRect(), R = b.width/2;
+    let dx = e.clientX - (b.left + R), dy = e.clientY - (b.top + R);
+    const l = Math.hypot(dx, dy); if (l > R){ dx *= R/l; dy *= R/l; }
+    knob.style.transform = `translate(${dx}px,${dy}px)`; W.joy = {x:dx/R, y:dy/R};
+  };
+  joy.addEventListener("pointerdown", e => { jid = e.pointerId; joy.setPointerCapture(jid); joyMove(e); });
+  joy.addEventListener("pointermove", e => { if (e.pointerId === jid) joyMove(e); });
+  const joyEnd = e => { if (e.pointerId !== jid) return; jid = null; knob.style.transform = ""; W.joy = {x:0, y:0}; };
+  joy.addEventListener("pointerup", joyEnd); joy.addEventListener("pointercancel", joyEnd);
+  $("#jumpBtn").addEventListener("pointerdown", e => { e.preventDefault(); W.jumpQ = true; });
+  // træk for at dreje kameraet
+  const cv = W.r.domElement; let did = null, lx = 0;
+  cv.addEventListener("pointerdown", e => { did = e.pointerId; lx = e.clientX; cv.setPointerCapture(did); });
+  cv.addEventListener("pointermove", e => { if (e.pointerId !== did) return; W.yaw -= (e.clientX - lx) * .008; lx = e.clientX; });
+  const end = e => { if (e.pointerId === did) did = null; };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+}
+
+function step(dt){
+  const p = W.p, v = W.v;
+  W.time += dt;
+  // bevægelige platforme
+  for (const c of W.movers){
+    const nx = c.mover.bx + Math.sin(W.time * c.mover.sp + c.mover.ph) * c.mover.amp;
+    c.mover.dx = nx - c.m.position.x; c.m.position.x = nx;
+  }
+  if (W.grounded && W.ground && W.ground.mover) p.x += W.ground.mover.dx;
+  // styring
+  let ix = (W.keys.r ? 1 : 0) - (W.keys.l ? 1 : 0) + W.joy.x;
+  let iz = (W.keys.f ? 1 : 0) - (W.keys.b ? 1 : 0) - W.joy.y;
+  if (W.keys.rl) W.yaw += 2 * dt; if (W.keys.rr) W.yaw -= 2 * dt;
+  const il = Math.hypot(ix, iz); if (il > 1){ ix /= il; iz /= il; }
+  const sy = Math.sin(W.yaw), cy = Math.cos(W.yaw);
+  const mx = -sy * iz + cy * ix, mz = -cy * iz - sy * ix;
+  const speed = owns("fast") ? 9 : 6.5;
+  v.x = mx * speed; v.z = mz * speed;
+  W.moving = il > .15;
+  if (W.moving) W.face = Math.atan2(mx, mz);
+  if (W.jumpQ){
+    if (W.grounded){ v.y = JUMP; W.grounded = false; W.dblUsed = false; sfx.pop(); }
+    else if (owns("dbl") && !W.dblUsed){ v.y = JUMP * .9; W.dblUsed = true; sfx.pop(); }
+    W.jumpQ = false;
+  }
+  v.y -= GRAV * dt;
+  const prevY = p.y;
+  p.x += v.x * dt; p.z += v.z * dt; p.y += v.y * dt;
+  W.grounded = false; W.ground = null;
+  for (const c of W.colliders){
+    const mp = c.m.position;
+    const minX = mp.x - c.w/2 - PR, maxX = mp.x + c.w/2 + PR, minZ = mp.z - c.d/2 - PR, maxZ = mp.z + c.d/2 + PR;
+    if (p.x <= minX || p.x >= maxX || p.z <= minZ || p.z >= maxZ) continue;
+    const top = mp.y + c.h/2, bot = mp.y - c.h/2;
+    if (p.y >= top || p.y + PH <= bot) continue;
+    if (prevY >= top - .06 && v.y <= 0){ p.y = top; v.y = 0; W.grounded = true; W.ground = c; }
+    else if (v.y > 0 && prevY + PH <= bot + .06){ p.y = bot - PH; v.y = 0; }
+    else {
+      const pen = [p.x - minX, maxX - p.x, p.z - minZ, maxZ - p.z], k = pen.indexOf(Math.min(...pen));
+      if (k === 0) p.x = minX; else if (k === 1) p.x = maxX; else if (k === 2) p.z = minZ; else p.z = maxZ;
+    }
+  }
+  if (W.grounded) W.dblUsed = false;
+  // farlige blokke og vand
+  for (const c of W.kills){
+    const mp = c.m.position;
+    if (Math.abs(p.x - mp.x) < c.w/2 + PR*.6 && Math.abs(p.z - mp.z) < c.d/2 + PR*.6 && p.y < mp.y + c.h/2 && p.y + PH > mp.y - c.h/2){
+      sfx.bad(); toast("Av! Rød lava!"); respawn(); return;
+    }
+  }
+  if (p.y < -5){ sfx.bad(); toast("Plask! Prøv igen"); respawn(); return; }
+  // mønter
+  for (const m of W.coins){
+    if (m.visible && Math.abs(m.position.x - p.x) < 1 && Math.abs(m.position.z - p.z) < 1 && Math.abs(m.position.y - (p.y + 1)) < 1.4){
+      m.visible = false; S.coins++; save(); sfx.pop(); updateHud();
+    }
+  }
+  // checkpoints og mål
+  if (W.grounded && W.ground){
+    if (W.ground.cp !== undefined && W.ground.cp > W.cp){ W.cp = W.ground.cp; updateHud(); W.keys = {}; W.joy = {x:0,y:0}; resetJoy(); askGate(); }
+    else if (W.ground.trophy && !W.done) stageDone();
+  }
+  // portaler
+  if (p.y < 1.5) for (const pt of W.portals){
+    if (Math.hypot(p.x - pt.x, p.z - pt.z) < 1.1){ const id = pt.id; sfx.win(); leaveWorld(() => openMap(id)); return; }
+  }
+}
+function resetJoy(){ $("#joyKnob").style.transform = ""; }
+
+function animate(dt){
+  const T = THREE, a = W.avatar, p = W.p;
+  a.position.copy(p);
+  let dr = W.face - a.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr));
+  a.rotation.y += dr * Math.min(1, dt * 12);
+  W.walk += dt * (W.moving && W.grounded ? 11 : 0);
+  const sw = W.moving && W.grounded ? Math.sin(W.walk) * .7 : W.grounded ? 0 : -.5;
+  W.legL.rotation.x = sw; W.legR.rotation.x = W.grounded ? -sw : .4;
+  W.armL.rotation.x = W.grounded ? -sw : -2.6; W.armR.rotation.x = W.grounded ? sw : -2.6;
+  if (W.prop) W.prop.rotation.y += dt * 14;
+  for (const m of W.coins) m.rotation.z += dt * 3;
+  if (W.cup) W.cup.rotation.y += dt;
+  W.portals.forEach((pt,i) => pt.glow.material.opacity = .45 + Math.sin(W.time*3 + i) * .15);
+  // skygge på det højeste underlag
+  let gy = -2.05;
+  for (const c of W.colliders){
+    const mp = c.m.position, top = mp.y + c.h/2;
+    if (Math.abs(p.x - mp.x) < c.w/2 && Math.abs(p.z - mp.z) < c.d/2 && top <= p.y + .05 && top > gy) gy = top;
+  }
+  W.shadow.position.set(p.x, gy + .02, p.z);
+  // kamera
+  const shop = !$("#shop").hidden;
+  if (shop){ let d = (a.rotation.y) - W.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); W.yaw += d * Math.min(1, dt * 4); }
+  const dist = shop ? 4.6 : 9, h = shop ? 1.4 : 4.5;
+  const want = new T.Vector3(p.x + Math.sin(W.yaw) * dist, p.y + h, p.z + Math.cos(W.yaw) * dist);
+  if (W.snap){ W.cam.position.copy(want); W.snap = false; }
+  else W.cam.position.lerp(want, Math.min(1, dt * 8));
+  const side = shop && innerWidth > 560 ? 1 : 0;     // skub figuren til venstre for butikspanelet
+  W.cam.lookAt(p.x + Math.cos(W.yaw) * side, p.y + (shop ? (side ? 1.3 : .3) : 1.5), p.z - Math.sin(W.yaw) * side);
+}
+
+function loop(t){
+  if (!W.running) return;
+  const dt = Math.min(.05, W.last ? (t - W.last) / 1000 : .016); W.last = t;
+  if ($("#veil").hidden){ step(dt/2); if (W.running && $("#veil").hidden) step(dt/2); }
+  if (!W.running) return;
+  animate(dt);
+  W.r.render(W.scene, W.cam);
+  W.raf = requestAnimationFrame(loop);
+}
+
+/* spørgsmål ved checkpoints: blandet fra fagene, på barnets klassetrin */
+function worldQuestion(){
+  const s = pick(["mat","mat","dan","eng","vid","his"]), b = bandOf(s);
+  if (s === "mat"){ const p = mathProblem(b, rnd(1, 8)); return {q: p.full ? p.q : p.q + " = ?", a:String(p.a), wrong:distractors(p.a, 3).map(String)}; }
+  if (s === "dan") return danQuiz(b, 1, 1)[0];
+  if (s === "eng") return langQuiz(ENG, "engelsk", "en-GB")(b, 1, 1)[0];
+  const [q, a, ...wrong] = pick((s === "vid" ? QUIZ : HISQ)[b]);
+  return {q, a, wrong};
+}
+function askGate(){
+  const q = worldQuestion(), opts = shuffle([q.a, ...q.wrong]);
+  openModal(`<h2>Checkpoint ${W.cp+1}!</h2>
+    <p style="margin:0;color:var(--ink-soft)">Svar rigtigt for at gemme dit checkpoint og få 3 🪙.</p>
+    ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
+    <div class="q-text" style="font-size:clamp(20px,4vw,28px)">${esc(q.q)}</div>
+    <div class="opts" id="gopts">${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>`, true);
+  const btns = [...$("#gopts").querySelectorAll(".opt")];
+  btns.forEach(x => x.onclick = () => {
+    btns.forEach(y => { y.disabled = true; if (y.textContent === q.a) y.classList.add("ok"); });
+    if (x.textContent === q.a){
+      sfx.ok(); if (q.say) speak(q.say, q.lang);
+      S.coins += 3; save(); updateHud();
+      setTimeout(() => { closeModal(); toast(`Checkpoint ${W.cp+1} gemt! +3 🪙`); confetti(60); }, 700);
+    } else {
+      x.classList.add("no"); sfx.bad();
+      setTimeout(askGate, 1700);
+    }
+  });
+}
+function stageDone(){
+  W.done = true; W.keys = {}; W.joy = {x:0,y:0}; resetJoy();
+  const prize = 20 + S.obby * 5;
+  S.coins += prize; const was = S.obby; S.obby++; save(); updateHud();
+  sfx.win(); confetti(200);
+  openModal(`<h2>Du klarede bane ${was}!</h2>
+    <div class="bigstars"><span class="on">🏆</span></div>
+    <p style="margin:0;font-size:18px">+${prize} 🪙</p>
+    <p style="margin:0;color:var(--ink-soft)">Næste forhindringsbane er længere og har nye udfordringer.</p>
+    <div class="row"><button class="btn main" id="nextObby">Bane ${S.obby} ▶</button><button class="btn" id="shopNow">🎨 Køb ting</button></div>`, true);
+  $("#nextObby").onclick = () => { closeModal(); buildCourse(S.obby); respawn(true); toast(`Bane ${S.obby}!`); };
+  $("#shopNow").onclick = () => { closeModal(); buildCourse(S.obby); respawn(true); toggleShop(true); };
+}
+
+/* butik og figur */
+function toggleShop(open){
+  const el = $("#shop"); if (!el) return;
+  el.hidden = !open; if (open) renderShop();
+}
+function renderShop(){
+  const sw = (key, list) => `<div class="swatches">${list.map(c => `<button class="sw" data-k="${key}" data-v="${c}" style="background:${c}" aria-label="Farve ${c}" aria-pressed="${S.look[key]===c}"></button>`).join("")}</div>`;
+  const hat = h => {
+    const own = owns(h.id), on = S.look.hat === h.id;
+    return `<div class="it"><span>${h.name}${h.price && !own ? `<small>${h.price} 🪙</small>` : ""}</span>
+      <button data-hat="${h.id}" class="${on ? "on" : ""}" ${!own && S.coins < h.price ? "disabled" : ""}>${on ? "På" : own ? "Tag på" : "Køb"}</button></div>`;
+  };
+  const ext = x => {
+    const own = owns(x.id);
+    return `<div class="it"><span>${x.name}<small>${x.desc}${own ? "" : ` · ${x.price} 🪙`}</small></span>
+      <button data-ext="${x.id}" class="${own ? "on" : ""}" ${own || S.coins < x.price ? "disabled" : ""}>${own ? "Har den" : "Køb"}</button></div>`;
+  };
+  $("#shop").innerHTML = `<h3>Min figur</h3>
+    <p style="margin:0;font-size:14px;color:var(--ink-soft)">Du har ${S.coins} 🪙. Tjen flere ved at klare baner i fagene (5 pr. stjerne) og i forhindringsbanen.</p>
+    <div><span class="lbl">Hud</span>${sw("skin", SKINS)}</div>
+    <div><span class="lbl">Trøje</span>${sw("shirt", CLOTH)}</div>
+    <div><span class="lbl">Bukser</span>${sw("pants", CLOTH)}</div>
+    <div><span class="lbl">Hatte</span><div class="items">${HATS.map(hat).join("")}</div></div>
+    <div><span class="lbl">Superkræfter</span><div class="items">${EXTRAS.map(ext).join("")}</div></div>
+    <div class="row"><button class="btn main" id="shopClose">Færdig</button></div>`;
+  $("#shopClose").onclick = () => toggleShop(false);
+}
+$("#shop").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || b.disabled) return;
+  if (b.dataset.k){ S.look[b.dataset.k] = b.dataset.v; sfx.pop(); }
+  else if (b.dataset.hat){
+    const h = HATS.find(x => x.id === b.dataset.hat);
+    if (!owns(h.id)){ if (S.coins < h.price) return; S.coins -= h.price; S.owned.push(h.id); sfx.win(); confetti(80); }
+    else sfx.pop();
+    S.look.hat = h.id;
+  } else if (b.dataset.ext){
+    const x = EXTRAS.find(y => y.id === b.dataset.ext);
+    if (owns(x.id) || S.coins < x.price) return;
+    S.coins -= x.price; S.owned.push(x.id); sfx.win(); confetti(80); toast(`${x.name} købt!`);
+  } else return;
+  save(); buildAvatar(); renderShop(); updateHud();
+});
 
 /* ================= start ================= */
 renderHub();

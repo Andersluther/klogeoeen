@@ -1756,10 +1756,12 @@ function makeDog(L){
   part(.13,.08,.06, 0,-.05,.45, "#14141a", head);
   part(.12,.03,.03, -.14,.09,.28, "#14141a", head); part(.12,.03,.03, .14,.09,.28, "#14141a", head);
   part(.16,.04,.04, 0,-.2,.44, "#14141a", head); part(.1,.08,.04, 0,-.25,.44, "#ff6f8a", head);
-  [-1,1].forEach(sx => { const e = part(.16,.24,.08, sx*.19,.35,-.04, fur, head); e.rotation.z = -sx*.18; part(.08,.14,.04, sx*.19,.33,0, cream, head).rotation.z = -sx*.18; });
+  if (L.ears === "floppy") [-1,1].forEach(sx => { const e = part(.12,.34,.26, sx*.34,.04,-.02, L.earCol || fur, head); e.rotation.z = sx*.25; });
+  else [-1,1].forEach(sx => { const e = part(.16,.24,.08, sx*.19,.35,-.04, fur, head); e.rotation.z = -sx*.18; part(.08,.14,.04, sx*.19,.33,0, cream, head).rotation.z = -sx*.18; });
   part(.62,.09,.5, 0,1.06,.62, "#2a2a33");
   part(.08,.1,.03, 0,.98,.88, "#ffc22e");
-  const tail = part(.26,.26,.36, 0,1.2,-.62, fur); tail.rotation.x = -.6; part(.16,.16,.2, 0,1.36,-.52, cream);
+  if (L.ears === "floppy"){ const tl = part(.3,.3,.5, 0,1.0,-.78, fur); tl.rotation.x = .5; }
+  else { const tail = part(.26,.26,.36, 0,1.2,-.62, fur); tail.rotation.x = -.6; part(.16,.16,.2, 0,1.36,-.52, cream); }
   A.g = g; A.prop = null; return A;
 }
 function makeAvatar(L){
@@ -2706,6 +2708,8 @@ const RANKS = [
    look:{skin:"#f0c4a8", shirt:"#d9705f", pants:"#2a2a33", hat:"none", hairStyle:"long", hairCol:"#4a2a22", glasses:true}},
   {name:"Onkel L", title:"Middel", min:60, e:"🌳",
    look:{skin:"#f6d2b8", shirt:"#ece3cf", pants:"#ece3cf", hat:"student", hairStyle:"short", hairCol:"#9a7350", glasses:true}},
+  {name:"Lili", title:"Godt på vej", min:100, e:"🐾",
+   look:{kind:"dog", fur:"#f7f2e8", cream:"#fffaf2", earCol:"#e2cfa8", ears:"floppy", skin:"#f7f2e8", shirt:"#e2cfa8", pants:"#f7f2e8", hat:"none"}},
   {name:"Chase", title:"Øvet", min:150, e:"⭐",
    look:{kind:"dog", fur:"#d98c45", cream:"#f6e3c4", skin:"#d98c45", shirt:"#d98c45", pants:"#d98c45", hat:"none"}},
   {name:"Onkel A", title:"Det bedste", min:300, e:"👑",
@@ -2721,10 +2725,11 @@ function rankPortrait(L, size=72){
     const f = L.fur || "#d98c45", c = L.cream || "#f6e3c4", ink = "#1d2742";
     return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true" style="flex:none">
       <circle cx="50" cy="50" r="48" fill="${f}" opacity=".25"/>
-      <path d="M22 40 L28 10 L44 28Z" fill="${f}" stroke="${ink}" stroke-width="2"/><path d="M78 40 L72 10 L56 28Z" fill="${f}" stroke="${ink}" stroke-width="2"/>
-      <path d="M28 34 L30 18 L38 28Z" fill="${c}"/><path d="M72 34 L70 18 L62 28Z" fill="${c}"/>
+      ${L.ears === "floppy" ? "" : `<path d="M22 40 L28 10 L44 28Z" fill="${f}" stroke="${ink}" stroke-width="2"/><path d="M78 40 L72 10 L56 28Z" fill="${f}" stroke="${ink}" stroke-width="2"/>
+      <path d="M28 34 L30 18 L38 28Z" fill="${c}"/><path d="M72 34 L70 18 L62 28Z" fill="${c}"/>`}
       <rect x="20" y="26" width="60" height="54" rx="10" fill="${f}" stroke="${ink}" stroke-width="2"/>
       <path d="M22 56 Q50 44 78 56 L74 76 Q50 86 26 76Z" fill="${c}"/>
+      ${L.ears === "floppy" ? `<rect x="10" y="30" width="16" height="34" rx="8" fill="${L.earCol || f}" stroke="${ink}" stroke-width="2"/><rect x="74" y="30" width="16" height="34" rx="8" fill="${L.earCol || f}" stroke="${ink}" stroke-width="2"/>` : ""}
       <path d="M32 46 Q37 42 42 46" stroke="${ink}" stroke-width="3" fill="none"/><path d="M58 46 Q63 42 68 46" stroke="${ink}" stroke-width="3" fill="none"/>
       <rect x="44" y="54" width="12" height="8" rx="3" fill="${ink}"/>
       <path d="M40 66 Q50 74 60 66" stroke="${ink}" stroke-width="2.5" fill="none"/><path d="M46 69 Q50 78 54 69Z" fill="#ff6f8a"/>

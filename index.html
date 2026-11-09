@@ -161,6 +161,7 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn.main{background:var(--sun)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
+.newpiece{animation:drop .45s ease-out}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .wtimer{width:min(420px,100%)}
 
@@ -834,7 +835,53 @@ const langQuiz = (pool, langName, lang) => (b, d, n) => shuffle(pool[b]).slice(0
    Hvert fag har en plan med 10 baner; hver bane er en spiltype. */
 const TYPEINFO = {meteor:["☄️","Meteorregn"], clock:["⏰","Klokken"], sort:["🗂️","Sortering"], memory:["🃏","Memory"],
   quiz:["❓","Quiz"], words:["🔤","Ordbygger"], drill:["➕","Regnestykker"], typing:["⌨️","Stav selv"], timeline:["⏳","Rækkefølge"],
-  runner:["🏃","Løb"], cook:["🍕","Køkken"], style:["💄","Styling"]};
+  runner:["🏃","Løb"], build:["🏠","Byg huset"], cook:["🍕","Køkken"], style:["💄","Styling"]};
+/* ---------- Byggeri ---------- */
+const DIGGER = `<svg viewBox="0 0 120 90" width="1.35em" height="1em" style="vertical-align:middle" aria-label="Gravemaskine"><rect x="8" y="66" width="62" height="16" rx="8" fill="#2a2a33"/><circle cx="18" cy="74" r="5" fill="#666"/><circle cx="60" cy="74" r="5" fill="#666"/><rect x="12" y="44" width="54" height="22" rx="3" fill="#ffc22e" stroke="#1d2742" stroke-width="2"/><rect x="40" y="24" width="24" height="22" rx="3" fill="#ffc22e" stroke="#1d2742" stroke-width="2"/><rect x="45" y="28" width="15" height="12" rx="2" fill="#bfe6f5"/><path d="M64 46 L92 18 L100 24 L74 52Z" fill="#f2a60f" stroke="#1d2742" stroke-width="2"/><path d="M92 18 L112 40 L104 46 L88 28Z" fill="#f2a60f" stroke="#1d2742" stroke-width="2"/><path d="M100 42 L118 50 L112 64 L96 56Z" fill="#7a7f8c" stroke="#1d2742" stroke-width="2"/></svg>`;
+const BYG = {
+  1: [["SAV","🪚"],["KRAN","🏗️"],["VEST","🦺"],["ØKSE","🪓"],["KROG","🪝"],["KÆDE","⛓️"],["HJELM","⛑️"],["STIGE","🪜"],["SKRUE","🔩"],["HAMMER","🔨"]],
+  2: [["MAGNET","🧲"],["LINEAL","📏"],["VINKEL","📐"],["MURSTEN","🧱"],["TRAKTOR","🚜"],["LASTBIL","🚛"],["HANDSKER","🧤"],["SKRUENØGLE","🔧"],["GRAVEMASKINE",DIGGER],["SIKKERHEDSBRILLER","🥽"]],
+  3: [["BYGGEKRAN","🏗️"],["AFSPÆRRING","🚧"],["SKRUENØGLE","🔧"],["SKRUETRÆKKER","🪛"],["GRAVEMASKINE",DIGGER],["VÆRKTØJSKASSE","🧰"],["SIKKERHEDSVEST","🦺"],["SIKKERHEDSHJELM","⛑️"],["MURSTEN","🧱"],["LASTBIL","🚛"]],
+};
+const bygName = w => w.charAt(0) + w.slice(1).toLowerCase();
+function bygQuiz(b, d, n){
+  return shuffle(BYG[b]).slice(0, n).map(([w,e]) => ({
+    q:"Hvad hedder det?", a:bygName(w),
+    wrong: shuffle(BYG[b].map(x => bygName(x[0])).filter(x => x !== bygName(w))).slice(0, 3),
+    visual:`<div class="pic" aria-hidden="true">${e}</div>`}));
+}
+const bygPairs = (b, n) => shuffle(BYG[b].filter(([,e]) => !e.startsWith("<"))).slice(0, n).map(([w,e]) => [e, bygName(w)]);
+const TOOLS = [["Hammer","🔨",0],["Sav","🪚",0],["Skruetrækker","🪛",0],["Skruenøgle","🔧",0],["Økse","🪓",0],["Traktor","🚜",1],["Kran","🏗️",1],["Lastbil","🚛",1]];
+const SAFETY = {t:"Beskytter det dig?", bins:["Sikkerhedsudstyr","Værktøj"], items:[["Hjelm","⛑️",0],["Sikkerhedsvest","🦺",0],["Handsker","🧤",0],["Sikkerhedsbriller","🥽",0],["Hammer","🔨",1],["Sav","🪚",1],["Skruenøgle","🔧",1],["Stige","🪜",1]]};
+const MATERIALS = {t:"Hvilket materiale?", bins:["Træ","Metal","Sten og beton"], items:[["Planke","🪵",0],["Bjælke af træ","",0],["Brædder","",0],["Skrue","🔩",1],["Kæde","⛓️",1],["Søm","",1],["Stålbjælke","",1],["Mursten","🧱",2],["Fliser","",2],["Brosten","",2],["Beton","",2]]};
+const TRADES = {t:"Hvem bruger det mest?", bins:["Tømrer","Murer","Elektriker"], items:[["Sav","🪚",0],["Planke","🪵",0],["Hammer","🔨",0],["Vinkel","📐",0],["Mursten","🧱",1],["Murske","",1],["Mørtel","",1],["Fliser","",1],["Stikkontakt","🔌",2],["Lyspære","💡",2],["Kabel","",2],["Sikringer","",2]]};
+const BYGSORT = {
+  1: [{t:"Værktøj eller maskine?", bins:["Værktøj","Maskine"], items:TOOLS}, SAFETY],
+  2: [MATERIALS, {t:"Værktøj eller maskine?", bins:["Værktøj","Maskine"], items:TOOLS}, SAFETY],
+  3: [MATERIALS, TRADES, SAFETY],
+};
+function bygMath(b, d, n){
+  const out = [];
+  const mk = (q, a, unit, visual) => ({q, a:`${a}${unit}`, wrong:distractors(a, 3).map(x => `${x}${unit}`), visual});
+  for (let i = 0; i < n; i++){
+    const t = rnd(0, 3);
+    if (b === 1){
+      if (t < 2){ const k = rnd(3, d >= 5 ? 10 : 7); out.push(mk("Hvor mange mursten er der?", k, "", `<div class="pic" style="font-size:clamp(28px,6vw,40px);max-width:320px;text-align:center">${"🧱".repeat(k)}</div>`)); }
+      else { const a = rnd(1, 5), c = rnd(1, 4); out.push(mk(`Du har ${a} hamre 🔨 og får ${c} mere. Hvor mange har du nu?`, a + c, "")); }
+    } else if (b === 2){
+      if (t === 0){ const l = pick([2,3,4,5]), k = rnd(2, 6); out.push(mk(`En planke er ${l} m lang. Hvor langt bliver ${k} planker lagt i forlængelse af hinanden?`, l * k, " m")); }
+      else if (t === 1){ const s = pick([2,4,5,10]), k = rnd(2, 8); out.push(mk(`Der skal ${s} skruer i hvert bræt. Hvor mange skruer skal der til ${k} brædder?`, s * k, "")); }
+      else if (t === 2){ const tot = rnd(30, 90), used = rnd(10, tot - 5); out.push(mk(`Du har ${tot} mursten og bruger ${used}. Hvor mange er der tilbage?`, tot - used, "")); }
+      else { const w = rnd(2, 5), v = rnd(2, 4); out.push(mk(`Et hus har ${w} vægge med ${v} vinduer i hver. Hvor mange vinduer er der?`, w * v, "")); }
+    } else {
+      if (t === 0){ const l = rnd(3, 9), w = rnd(2, 6); out.push(mk(`Et gulv er ${l} m langt og ${w} m bredt. Hvor mange m² gulv er der?`, l * w, " m²")); }
+      else if (t === 1){ const l = rnd(3, 8), w = rnd(2, 6); out.push(mk(`Hvor mange meter fodliste skal der til hele vejen rundt i et rum på ${l} m × ${w} m?`, 2 * (l + w), " m")); }
+      else if (t === 2){ const p = pick([25,35,45,60]), k = rnd(3, 8); out.push(mk(`En planke koster ${p} kr. Hvad koster ${k} planker?`, p * k, " kr")); }
+      else { const h = pick([2,3]), l = rnd(3, 7); out.push(mk(`En væg er ${h} m høj og ${l} m lang. Hvor mange m² skal males?`, h * l, " m²")); }
+    }
+  }
+  return out;
+}
 /* Kategorier (fag) med hver deres spil. Hvert spil har 10 baner pr. klassetrin. */
 const memHint = t => () => t;
 const CATS = [
@@ -884,6 +931,16 @@ const CATS = [
      {type:"memory", name:"Hvem gjorde hvad?", art:"🃏", desc:"Find personen og det, de er kendt for.",
       cfg:{pairs:textPairs(HISMEM), hint:b => b===1 ? "Find tingen fra gamle dage og dens navn." : "Find personen og det, de er kendt for."}},
    ]},
+  {id:"byg", name:"Byggeri", art:"🏗️", c:"var(--sun)", map:"#fff0bf", desc:"Værktøj, maskiner og materialer. Stav, sortér og regn som på en rigtig byggeplads.",
+   tracks:[
+     {type:"build", name:"Byg huset", art:"🏠", desc:"Hvert rigtigt svar sætter en ny del på huset. Kan du bygge det færdigt?"},
+     {type:"quiz", name:"Hvad hedder det?", art:"🔨", desc:"Se billedet af værktøjet eller maskinen og vælg det rigtige navn.", cfg:{make:bygQuiz}},
+     {type:"words", name:"Stav med bogstaver", art:"🔤", desc:"Byg navnet på værktøjet af de blandede bogstaver.", cfg:{pool:BYG}},
+     {type:"typing", name:"Stav selv", art:"⌨️", desc:"Skriv navnet på værktøjet eller maskinen selv.", cfg:{pool:BYG, keys:"da"}},
+     {type:"memory", name:"Byggeri-memory", art:"🃏", desc:"Find billedet og navnet, der hører sammen.", cfg:{pairs:bygPairs, hint:() => "Find værktøjet eller maskinen og dets navn."}},
+     {type:"sort", name:"Byggepladsen", art:"🗂️", desc:"Værktøj eller maskine, sikkerhedsudstyr, materialer og fag.", cfg:{sets:BYGSORT}},
+     {type:"quiz", name:"Byggeregning", art:"📐", desc:"Tæl mursten, regn planker og skruer, og find m² og meter.", cfg:{make:bygMath}, v:"calc"},
+   ]},
   {id:"vid", name:"Geografi", art:"🌍", c:"var(--leaf)", map:"#c3ecd0", desc:"Quiz om verden, hovedstæder og sortering af lande og byer.",
    tracks:[
      {type:"quiz", name:"Jorden rundt", art:"🌍", desc:"Dyr, lande, planeter og Danmark.", cfg:{bank:QUIZ}},
@@ -894,7 +951,7 @@ const CATS = [
 ];
 const SUBJECTS = [];
 CATS.forEach(cat => cat.tracks.forEach(t => SUBJECTS.push({
-  id:`${cat.id}.${t.type}`, cat:cat.id, subj:cat.name, name:t.name, art:t.art, desc:t.desc, c:cat.c, map:cat.map,
+  id:`${cat.id}.${t.type}${t.v ? "-" + t.v : ""}`, cat:cat.id, subj:cat.name, name:t.name, art:t.art, desc:t.desc, c:cat.c, map:cat.map,
   plan:Array(LEVELS).fill(t.type), games:{[t.type]: t.cfg || {}} })));
 SUBJECTS.push(
   {id:"run", arcade:true, subj:"Spillehal", name:"Lynløberen", art:"🏃", c:"var(--sky)", map:"#c3e0ff",
@@ -913,7 +970,7 @@ function buildSpec(s, b, d){
   return Object.assign({type, k, ico: d === LEVELS ? "👑" : TYPEINFO[type][0]}, typeof g === "function" ? g(b,k,d) : (g || {}));
 }
 const RUNNERS = {meteor:playMath, clock:playClock, words:playWords, memory:playMemory, quiz:playQuiz, sort:playSort, timeline:playTimeline,
-  drill:playDrill, typing:playTyping, runner:playRunner, cook:playCook, style:playStyle};
+  drill:playDrill, typing:playTyping, build:playBuild, runner:playRunner, cook:playCook, style:playStyle};
 
 /* ================= hub ================= */
 function renderTop(){
@@ -1731,8 +1788,8 @@ function initWorld(){
   // portaler til fagene (syd for spawn)
   const PS = CATS;
   PS.forEach((s, i) => {
-    const a = (20 + i * (140 / (PS.length-1))) * Math.PI/180;
-    const cx = 12 * Math.cos(a), cz = 12 * Math.sin(a);
+    const a = (14 + i * (152 / (PS.length-1))) * Math.PI/180;
+    const cx = 13.5 * Math.cos(a), cz = 13.5 * Math.sin(a);
     const tx = -Math.sin(a), tz = Math.cos(a);   // tangent
     const col = getComputedStyle(document.documentElement).getPropertyValue(s.c.slice(4,-1)).trim() || "#7a5cff";
     W.box(.8,4,.8, cx+tx*1.6, 2, cz+tz*1.6, col);
@@ -2205,6 +2262,66 @@ function learnBreak(b, then){
       $("#brow").hidden = false; $("#bnext").onclick = go; $("#bnext").focus();
     }
   });
+}
+
+/* ================= BYGGERI: Byg huset ================= */
+function houseSVG(n, wobble){
+  const P = [
+    `<rect x="30" y="196" width="200" height="14" fill="#8a8f9c" stroke="#1d2742" stroke-width="2"/>`,
+    `<rect x="40" y="166" width="180" height="30" fill="#d9704f" stroke="#1d2742" stroke-width="2"/>`,
+    `<rect x="40" y="136" width="180" height="30" fill="#d9704f" stroke="#1d2742" stroke-width="2"/>`,
+    `<rect x="40" y="106" width="180" height="30" fill="#d9704f" stroke="#1d2742" stroke-width="2"/>`,
+    `<rect x="112" y="150" width="36" height="46" rx="3" fill="#7a4a2a" stroke="#1d2742" stroke-width="2"/><circle cx="140" cy="174" r="3" fill="#ffc22e"/>`,
+    `<rect x="58" y="122" width="34" height="30" fill="#bfe6f5" stroke="#1d2742" stroke-width="3"/><path d="M75 122 V152 M58 137 H92" stroke="#1d2742" stroke-width="2"/>`,
+    `<rect x="168" y="122" width="34" height="30" fill="#bfe6f5" stroke="#1d2742" stroke-width="3"/><path d="M185 122 V152 M168 137 H202" stroke="#1d2742" stroke-width="2"/>`,
+    `<path d="M28 108 L130 44 L232 108Z" fill="#e8432f" stroke="#1d2742" stroke-width="3"/>`,
+    `<rect x="172" y="50" width="20" height="36" fill="#7a7f8c" stroke="#1d2742" stroke-width="2"/>`,
+    `<path d="M130 44 V18" stroke="#1d2742" stroke-width="3"/><path d="M130 18 L154 24 L130 30Z" fill="#e8432f"/><path d="M130 24 H154" stroke="#fff" stroke-width="2"/>`,
+  ];
+  let pieces = "";
+  for (let i = 0; i < n; i++) pieces += i === n - 1 && wobble ? `<g class="newpiece">${P[i]}</g>` : P[i];
+  const ghost = P.slice(n).map(x => x.replace(/fill="[^"]*"/g, 'fill="none"').replace(/stroke="#1d2742"/g, 'stroke="#1d274233"').replace(/stroke="#fff"/g, 'stroke="none"')).join("");
+  return `<svg viewBox="0 0 260 220" style="width:min(360px,90%);height:auto" role="img" aria-label="Huset er ${n} af 10 dele færdigt">
+    <rect x="0" y="206" width="260" height="14" fill="#5cb85f"/>${ghost}${pieces}</svg>`;
+}
+function playBuild(stage, b, d){
+  const PARTS = 10, NAMES = ["fundamentet","første mur","anden mur","tredje mur","døren","første vindue","andet vindue","taget","skorstenen","flaget"];
+  let built = 0, wrong = 0, timers = [], locked = false;
+  stage.innerHTML = `<div class="quiz" style="max-width:640px;margin:0 auto">
+    <div style="display:grid;place-items:center" id="house"></div>
+    <p class="fb" id="hfb">Svar rigtigt for at bygge ${NAMES[0]}.</p>
+    <div class="q-visual" id="hvis"></div>
+    <div class="q-text" id="hq" style="font-size:clamp(20px,4vw,28px)"></div>
+    <div class="opts" id="hopts"></div></div>`;
+  const draw = wob => { $("#house").innerHTML = houseSVG(built, wob); setStatus(`🏠 ${built}/${PARTS}`); };
+  function ask(){
+    if (built >= PARTS){
+      sfx.win(); confetti(220);
+      const stars = wrong === 0 ? 3 : wrong <= 2 ? 2 : 1;
+      return timers.push(setTimeout(() => finish(stars, `Huset er færdigt! ${wrong} forkerte svar undervejs.`), 1400));
+    }
+    const pool = Math.random() < .5 ? bygQuiz(b, d, 1) : bygMath(b, d, 1);
+    const q = pool[0], opts = shuffle([q.a, ...q.wrong]);
+    locked = false;
+    $("#hvis").innerHTML = q.visual || ""; $("#hq").textContent = q.q;
+    $("#hopts").innerHTML = opts.map(o => `<button class="opt">${esc(o)}</button>`).join("");
+    $("#hopts").querySelectorAll(".opt").forEach(x => x.onclick = () => {
+      if (locked) return; locked = true;
+      $("#hopts").querySelectorAll(".opt").forEach(y => { y.disabled = true; if (y.textContent === q.a) y.classList.add("ok"); });
+      if (x.textContent === q.a){
+        built++; setScore(score + 15); sfx.ok(); draw(true);
+        $("#hfb").textContent = built < PARTS ? `Flot! Næste: ${NAMES[built]}.` : "Huset er færdigt! 🎉";
+        timers.push(setTimeout(ask, 900));
+      } else {
+        wrong++; sfx.bad(); x.classList.add("no");
+        $("#hfb").textContent = `Ups! Svaret var ${q.a}. Prøv igen med en ny opgave.`;
+        const h = $("#house"); h.classList.remove("shake"); void h.offsetWidth; h.classList.add("shake");
+        timers.push(setTimeout(ask, 1700));
+      }
+    });
+  }
+  draw(false); ask();
+  return () => timers.forEach(clearTimeout);
 }
 
 /* ================= MATEMATIK: Regnestykker ================= */

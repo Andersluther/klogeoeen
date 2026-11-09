@@ -162,6 +162,27 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
 .newpiece{animation:drop .45s ease-out}
+.drawapp{display:flex;flex-direction:column;gap:10px}
+.drawapp .sw{width:38px;height:38px;border-radius:50%;border:3px solid var(--ink);padding:0}
+.drawapp .sw[aria-pressed="true"]{outline:4px solid var(--grape);outline-offset:2px}
+.piano{display:flex;gap:4px;justify-content:center;margin-top:10px;user-select:none;-webkit-user-select:none}
+.pkey{flex:1;max-width:64px;height:min(46vw,260px);border:3px solid var(--ink);border-radius:0 0 12px 12px;background:#fff;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;font-family:var(--display);font-size:clamp(16px,3.5vw,24px);box-shadow:3px 3px 0 var(--ink);touch-action:manipulation}
+.pkey.next{background:var(--sun)} .pkey.down{background:#d9cfff;transform:translateY(3px)}
+.calc{width:min(380px,100%);margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.cdisp{background:var(--ink);color:var(--paper);border-radius:16px;padding:12px 16px;text-align:right;display:flex;flex-direction:column;font-variant-numeric:tabular-nums}
+.cdisp small{opacity:.7;font-size:18px;min-height:22px;word-break:break-all} .cdisp b{font-family:var(--display);font-weight:400;font-size:clamp(34px,9vw,52px);word-break:break-all}
+.ckeys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ckeys .opt{font-size:26px;min-height:62px}
+.tbl-wrap{display:flex;flex-direction:column;gap:10px;align-items:center}
+.gtab{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:clamp(13px,2.6vw,18px)}
+.gtab th,.gtab td{border:2px solid var(--ink);width:clamp(28px,7vw,48px);height:clamp(28px,7vw,44px);text-align:center;cursor:pointer}
+.gtab th{background:var(--sand)} .gtab td.lane{background:#e8e2ff} .gtab td.hit{background:var(--sun);font-weight:900}
+.dict{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;align-items:start}
+@media (max-width:720px){ .dict{grid-template-columns:minmax(0,1fr)} }
+.dcard{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;box-shadow:4px 4px 0 var(--ink)}
+.dl{display:grid;grid-template-columns:100px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%}
+.dl b{font-size:22px} .dl span{color:var(--ink-soft);font-size:14px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
 .ttt-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
 @media (max-width:720px){ .ttt-wrap{grid-template-columns:minmax(0,1fr)} }
 .ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(330px,100%);margin:0 auto}
@@ -403,6 +424,8 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
     <div class="islands" id="arcade"></div>
     <h2 class="outline sect">Fag</h2>
     <div class="islands" id="islands"></div>
+    <h2 class="outline sect">Apps</h2>
+    <div class="islands" id="apps"></div>
     <p class="tip">Vælg et fag, dit klassetrin og et spil. Hvert spil har 10 baner, og hver bane du klarer, låser den næste op. For hver 5. stjerne får du et klistermærke, og under 🌈 Tema kan du skifte udseende.</p>
   </main>
 
@@ -1104,7 +1127,7 @@ function setCombo(n){ $("#combo").hidden = n < 2; $("#comboN").textContent = n; 
 const heartsHTML = (n,max=3) => `<span class="hearts" aria-label="${n} liv">${"❤️".repeat(Math.max(0,n))}${"🤍".repeat(Math.max(0,max-n))}</span>`;
 
 function startLevel(d){
-  stopGame(); closeModal();
+  stopGame(); closeModal(); appMode = false; $("#score").parentElement.hidden = false;
   const b = bandFor(subj), sp = buildSpec(subj,b,d);
   cur = {s:subj.id, b, d, sp};
   $("#gameTitle").textContent = `${subj.subj} · Bane ${d} · ${TYPEINFO[sp.type][1]}`;
@@ -1113,7 +1136,7 @@ function startLevel(d){
   show("play");
   cleanup = RUNNERS[sp.type](stage, b, d, sp) || null;
 }
-$("#backBtn").onclick = () => { stopGame(); renderMap(); show("mapView"); };
+$("#backBtn").onclick = () => { stopGame(); if (appMode){ appMode = false; $("#score").parentElement.hidden = false; return showHub(); } renderMap(); show("mapView"); };
 
 function finish(stars, line){
   stopGame();
@@ -3277,7 +3300,166 @@ function showThemes(){
   };
 }
 
+/* ================= APPS ================= */
+const APPS = [
+  {id:"draw", name:"Tegneblok", art:"🎨", c:"var(--rose)", desc:"Tegn med farver, pensler og stempler. Få en tegneopgave på dansk eller engelsk."},
+  {id:"piano", name:"Klaver", art:"🎹", c:"var(--grape)", desc:"Spil frit, eller lær at spille Mester Jakob og Blinke lille stjerne."},
+  {id:"calc", name:"Lommeregner", art:"🧮", c:"var(--sky)", desc:"Store knapper. Tjek dine regnestykker."},
+  {id:"table", name:"Gangetabellen", art:"✖️", c:"var(--leaf)", desc:"Tryk på et felt og se regnestykket. Find mønstrene i tabellerne."},
+  {id:"dict", name:"Billedordbog", art:"📖", c:"var(--orange)", desc:"Se ord på dansk, engelsk og tysk, og hør dem læst op."},
+];
+let appMode = false;
+function renderApps(){
+  $("#apps").innerHTML = APPS.map(a => `<button class="isle" style="--c:${a.c}" data-app="${a.id}"><span class="art" aria-hidden="true">${a.art}</span>
+    <span><span class="subj">App</span><h2 class="outline">${a.name}</h2><p>${a.desc}</p></span></button>`).join("");
+}
+$("#apps").addEventListener("click", e => { const x = e.target.closest(".isle"); if (x){ sfx.pop(); openApp(x.dataset.app); } });
+function openApp(id){
+  stopGame(); closeModal();
+  const a = APPS.find(x => x.id === id); appMode = true;
+  $("#gameTitle").textContent = a.name; setScore(0); setCombo(0); setStatus("");
+  $("#score").parentElement.hidden = true;
+  const stage = $("#stage"); stage.innerHTML = ""; show("play");
+  cleanup = ({draw:appDraw, piano:appPiano, calc:appCalc, table:appTable, dict:appDict})[id](stage) || null;
+}
+function speakLang(word, lang){ try { const u = new SpeechSynthesisUtterance(word); u.lang = lang; u.rate = .85; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch(e) {} }
+
+function appDraw(stage){
+  const COLS = ["#1d2742","#e8432f","#ff9a3c","#ffd23f","#2fa65a","#3d7bff","#9b5cff","#ff7eb6","#7a4a2a","#ffffff"];
+  const STAMPS = ["⭐","❤️","🌸","🐶","🦄","🌈","☀️","🚗","⚽","🍎"];
+  const PROMPTS = [["en elefant","an elephant"],["et hus","a house"],["en sol","a sun"],["en kat","a cat"],["et træ","a tree"],["en bil","a car"],["en blomst","a flower"],["en fisk","a fish"],["en raket","a rocket"],["en regnbue","a rainbow"],["en enhjørning","a unicorn"],["en fodbold","a football"],["en gravemaskine","a digger"],["dig selv","yourself"],["din familie","your family"]];
+  let col = COLS[0], size = 8, tool = "pen", stamp = STAMPS[0], drawing = false, last = null;
+  stage.innerHTML = `<div class="drawapp">
+    <div class="row" style="justify-content:flex-start;gap:6px" id="dcols">${COLS.map(c => `<button class="sw" style="background:${c}" data-c="${c}" aria-label="Farve" aria-pressed="${c===col}"></button>`).join("")}</div>
+    <div class="row" style="justify-content:flex-start;gap:6px">
+      ${[4,8,16,28].map(s => `<button class="btn" data-s="${s}" style="padding:6px 12px"><span style="display:inline-block;width:${s/1.5+4}px;height:${s/1.5+4}px;border-radius:50%;background:var(--ink);vertical-align:middle"></span></button>`).join("")}
+      <button class="btn" data-t="eraser">🧽 Viskelæder</button><button class="btn" data-t="stamp">🔖 Stempel</button><button class="btn" id="dclear">🗑️ Ryd</button><button class="btn main" id="dprompt">💡 Tegneopgave</button>
+    </div>
+    <div class="row" style="justify-content:flex-start;gap:4px" id="dstamps" hidden>${STAMPS.map(s => `<button class="btn" data-st="${s}" style="padding:4px 8px;font-size:22px">${s}</button>`).join("")}</div>
+    <p class="fb" id="dtask" style="text-align:left"></p>
+    <canvas id="dcv" style="width:100%;aspect-ratio:4/3;background:#fff;border:3px solid var(--ink);border-radius:16px;touch-action:none;display:block"></canvas></div>`;
+  const cv = $("#dcv"), cx = cv.getContext("2d");
+  const fit = () => { const r = cv.getBoundingClientRect(), img = cv.width ? cx.getImageData(0,0,cv.width,cv.height) : null; cv.width = Math.round(r.width); cv.height = Math.round(r.height); cx.fillStyle = "#fff"; cx.fillRect(0,0,cv.width,cv.height); if (img) cx.putImageData(img,0,0); };
+  fit();
+  const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+  cv.addEventListener("pointerdown", e => {
+    const p = pos(e);
+    if (tool === "stamp"){ cx.font = `${size*5}px system-ui`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(stamp, p[0], p[1]); sfx.pop(); return; }
+    drawing = true; last = p; cv.setPointerCapture(e.pointerId);
+    cx.fillStyle = tool === "eraser" ? "#fff" : col; cx.beginPath(); cx.arc(p[0], p[1], size/2, 0, 7); cx.fill();
+  });
+  cv.addEventListener("pointermove", e => { if (!drawing) return; const p = pos(e);
+    cx.strokeStyle = tool === "eraser" ? "#fff" : col; cx.lineWidth = tool === "eraser" ? size*2.5 : size; cx.lineCap = cx.lineJoin = "round";
+    cx.beginPath(); cx.moveTo(last[0], last[1]); cx.lineTo(p[0], p[1]); cx.stroke(); last = p; });
+  const up = () => drawing = false; cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  stage.querySelector(".drawapp").addEventListener("click", e => {
+    const x = e.target.closest("button"); if (!x) return;
+    if (x.dataset.c){ col = x.dataset.c; tool = "pen"; $("#dstamps").hidden = true; document.querySelectorAll("#dcols .sw").forEach(y => y.setAttribute("aria-pressed", String(y === x))); }
+    if (x.dataset.s) size = +x.dataset.s;
+    if (x.dataset.t === "eraser"){ tool = "eraser"; $("#dstamps").hidden = true; }
+    if (x.dataset.t === "stamp"){ tool = "stamp"; $("#dstamps").hidden = false; }
+    if (x.dataset.st) stamp = x.dataset.st;
+    if (x.id === "dclear"){ cx.fillStyle = "#fff"; cx.fillRect(0,0,cv.width,cv.height); }
+    if (x.id === "dprompt"){ const [da, en] = pick(PROMPTS); const english = Math.random() < .4;
+      $("#dtask").innerHTML = english ? `Draw ${en}! <small style="color:var(--ink-soft)">(Tegn ${da})</small>` : `Tegn ${da}!`; sfx.ok();
+      if (english) speakLang(`Draw ${en}`, "en-GB"); }
+    sfx.pop();
+  });
+  return () => {};
+}
+
+function appPiano(stage){
+  const KEYS = [["G","g3",196],["A","a3",220],["H","h3",246.94],["C","c4",261.63],["D","d4",293.66],["E","e4",329.63],["F","f4",349.23],["G","g4",392],["A","a4",440],["H","h4",493.88],["C","c5",523.25]];
+  const SONGS = {
+    "Mester Jakob":"c4 d4 e4 c4 c4 d4 e4 c4 e4 f4 g4 e4 f4 g4 g4 a4 g4 f4 e4 c4 g4 a4 g4 f4 e4 c4 c4 g3 c4 c4 g3 c4",
+    "Blinke lille stjerne":"c4 c4 g4 g4 a4 a4 g4 f4 f4 e4 e4 d4 d4 c4 g4 g4 f4 f4 e4 e4 d4 g4 g4 f4 f4 e4 e4 d4 c4 c4 g4 g4 a4 a4 g4 f4 f4 e4 e4 d4 d4 c4",
+  };
+  let song = null, pos = 0;
+  stage.innerHTML = `<div class="pianoapp">
+    <div class="row" style="justify-content:flex-start">${Object.keys(SONGS).map(n => `<button class="btn" data-song="${n}">🎵 ${n}</button>`).join("")}<button class="btn" data-song="">Spil frit</button></div>
+    <p class="fb" id="pfb" style="text-align:left">Spil frit, eller vælg en sang. Den tangent, du skal trykke på, lyser gult.</p>
+    <div class="piano" id="piano">${KEYS.map(([n,id]) => `<button class="pkey" data-k="${id}"><span>${n}</span></button>`).join("")}</div></div>`;
+  const play = f => { try { ac = ac || new (window.AudioContext||window.webkitAudioContext)(); const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), o2 = ac.createOscillator();
+    o.type = "triangle"; o2.type = "sine"; o.frequency.value = f; o2.frequency.value = f*2; g.gain.setValueAtTime(.25, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.2);
+    o.connect(g); o2.connect(g); g.connect(ac.destination); o.start(t); o2.start(t); o.stop(t+1.25); o2.stop(t+1.25); } catch(e) {} };
+  const mark = () => { document.querySelectorAll("#piano .pkey").forEach(k => k.classList.toggle("next", !!song && k.dataset.k === song[pos])); };
+  stage.querySelector(".row").onclick = e => { const x = e.target.closest("button"); if (!x) return; const n = x.dataset.song;
+    song = n ? SONGS[n].split(" ") : null; pos = 0; $("#pfb").textContent = n ? `${n}: tryk på den gule tangent.` : "Spil frit!"; mark(); };
+  $("#piano").addEventListener("pointerdown", e => {
+    const x = e.target.closest(".pkey"); if (!x) return;
+    const k = KEYS.find(z => z[1] === x.dataset.k); play(k[2]); x.classList.add("down"); setTimeout(() => x.classList.remove("down"), 180);
+    if (song){
+      if (x.dataset.k === song[pos]){ pos++; if (pos >= song.length){ $("#pfb").textContent = "Du spillede hele sangen! 🎉"; confetti(120); song = null; } }
+      else $("#pfb").textContent = `Prøv tangenten ${KEYS.find(z => z[1] === song[pos])[0]}.`;
+      mark();
+    }
+  });
+  return () => {};
+}
+
+function appCalc(stage){
+  let expr = "";
+  stage.innerHTML = `<div class="calc"><div class="cdisp"><small id="cexpr">&nbsp;</small><b id="cres">0</b></div>
+    <div class="ckeys">${["7","8","9","÷","4","5","6","×","1","2","3","−","0",",","=","+"].map(k => `<button class="opt" data-k="${k}" style="${"÷×−+=".includes(k) ? "background:var(--sun)" : ""}">${k}</button>`).join("")}
+    <button class="opt" data-k="C" style="grid-column:span 2;background:var(--lock)">Ryd</button><button class="opt" data-k="⌫" style="grid-column:span 2;background:var(--lock)">⌫</button></div></div>`;
+  const evalE = s => { const js = s.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/,/g,"."); if (!/^[0-9+\-*/. ]+$/.test(js)) return null;
+    const t = js.match(/\d+(?:\.\d+)?|[+\-*/]/g); if (!t || /[+\-*/]$/.test(js.trim())) return null;
+    const vals = [], ops = [], pr = o => (o === "*" || o === "/") ? 2 : 1;
+    const ap = () => { const b = vals.pop(), a = vals.pop(), o = ops.pop(); if (a === undefined || b === undefined) throw 0; vals.push(o === "+" ? a+b : o === "-" ? a-b : o === "*" ? a*b : a/b); };
+    try { let expectNum = true;
+      for (const tk of t){
+        if (/\d/.test(tk)){ vals.push(parseFloat(tk)); expectNum = false; }
+        else { if (expectNum) return null; while (ops.length && pr(ops.at(-1)) >= pr(tk)) ap(); ops.push(tk); expectNum = true; }
+      }
+      while (ops.length) ap(); const v = vals[0]; return vals.length === 1 && Number.isFinite(v) ? Math.round(v*1e6)/1e6 : null;
+    } catch(e){ return null; } };
+  const fmt = v => String(v).replace(".", ",");
+  stage.querySelector(".ckeys").onclick = e => {
+    const x = e.target.closest("button"); if (!x) return; const k = x.dataset.k; sfx.pop();
+    if (k === "C") expr = ""; else if (k === "⌫") expr = expr.slice(0, -1);
+    else if (k === "="){ const v = evalE(expr); if (v !== null){ $("#cexpr").textContent = `${expr} =`; expr = fmt(v); $("#cres").textContent = expr; return; } $("#cres").textContent = "Fejl"; return; }
+    else expr += k;
+    $("#cexpr").textContent = expr || " "; const v = evalE(expr); $("#cres").textContent = v === null ? (expr || "0") : fmt(v);
+  };
+  return () => {};
+}
+
+function appTable(stage){
+  stage.innerHTML = `<div class="tbl-wrap"><p class="fb" id="tbfb" style="font-size:clamp(22px,5vw,34px);font-family:var(--display)">Tryk på et felt</p>
+    <div style="overflow-x:auto"><table class="gtab"><tr><th>×</th>${[...Array(10)].map((_,j) => `<th>${j+1}</th>`).join("")}</tr>
+    ${[...Array(10)].map((_,i) => `<tr><th>${i+1}</th>${[...Array(10)].map((_,j) => `<td data-a="${i+1}" data-b="${j+1}">${(i+1)*(j+1)}</td>`).join("")}</tr>`).join("")}</table></div>
+    <p style="margin:0;color:var(--ink-soft);text-align:center">Kig efter mønstre: 5-tabellen ender på 0 eller 5, og 10-tabellen ender altid på 0.</p></div>`;
+  stage.querySelector(".gtab").onclick = e => {
+    const td = e.target.closest("td"); if (!td) return; const a = +td.dataset.a, b = +td.dataset.b;
+    stage.querySelectorAll("td").forEach(c => c.className = (+c.dataset.a === a || +c.dataset.b === b) ? "lane" : "");
+    td.className = "hit"; $("#tbfb").textContent = `${a} × ${b} = ${a*b}`; sfx.pop();
+  };
+  return () => {};
+}
+
+function appDict(stage){
+  const map = new Map();
+  for (const b of [1,2,3]){
+    WORDS[b].forEach(([w,e]) => { const o = map.get(e) || {}; o.da = o.da || w.charAt(0) + w.slice(1).toLowerCase(); map.set(e, o); });
+    ENG[b].forEach(([w,e]) => { const o = map.get(e) || {}; o.en = o.en || w; map.set(e, o); });
+    DEU[b].forEach(([w,e]) => { const o = map.get(e) || {}; o.de = o.de || w; map.set(e, o); });
+  }
+  const list = [...map.entries()].filter(([,o]) => o.da && o.en && o.de);
+  stage.innerHTML = `<div class="dict"><div class="dcard" id="dcard"><p style="margin:0;color:var(--ink-soft)">Tryk på et billede.</p></div>
+    <div class="dgrid">${list.map(([e]) => `<button class="opt" data-e="${e}" style="font-size:34px;min-height:64px">${e}</button>`).join("")}</div></div>`;
+  stage.querySelector(".dgrid").onclick = ev => {
+    const x = ev.target.closest("button"); if (!x) return; const o = map.get(x.dataset.e); sfx.pop();
+    $("#dcard").innerHTML = `<div class="pic">${x.dataset.e}</div>
+      <div class="dl"><span>🇩🇰 Dansk</span><b>${esc(o.da)}</b><button class="btn" data-say="${esc(o.da)}" data-l="da-DK">🔊</button></div>
+      <div class="dl"><span>🇬🇧 Engelsk</span><b>${esc(o.en)}</b><button class="btn" data-say="${esc(o.en)}" data-l="en-GB">🔊</button></div>
+      <div class="dl"><span>🇩🇪 Tysk</span><b>${esc(o.de)}</b><button class="btn" data-say="${esc(o.de)}" data-l="de-DE">🔊</button></div>`;
+  };
+  $("#dcard").onclick = ev => { const x = ev.target.closest("[data-say]"); if (x) speakLang(x.dataset.say, x.dataset.l); };
+  return () => {};
+}
+
 /* ================= start ================= */
+renderApps();
 $("#themeBtn").onclick = () => { sfx.pop(); showThemes(); };
 $("#rankBtn").onclick = () => { sfx.pop(); showRanks(); };
 applyTheme();

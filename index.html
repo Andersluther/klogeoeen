@@ -1064,9 +1064,9 @@ function finish(stars, line){
       <button class="btn ${hasNext?"":"main"}" id="again">Prøv igen</button>
       <button class="btn" id="toMap">Banekort</button>
     </div>`);
-  if (hasNext) $("#nextL").onclick = () => startLevel(cur.d+1);
-  $("#again").onclick = () => startLevel(cur.d);
-  $("#toMap").onclick = () => { closeModal(); renderMap(); show("mapView"); };
+  if (hasNext) $("#nextL").onclick = () => learnBreak(cur.b, () => startLevel(cur.d+1));
+  $("#again").onclick = () => learnBreak(cur.b, () => startLevel(cur.d));
+  $("#toMap").onclick = () => learnBreak(cur.b, () => { closeModal(); renderMap(); show("mapView"); });
   ($("#nextL") || $("#again")).focus();
 }
 function nextStickerHTML(){
@@ -2072,10 +2072,10 @@ function stageDone(){
     ${rankUpHTML(starsBefore)}
     ${fresh.length ? `<div class="newstick">Nyt klistermærke!<b>${fresh.join(" ")}</b></div>` : nextStickerHTML()}
     <div class="row"><button class="btn main" id="nextObby">Bane ${st+1} ▶</button><button class="btn" id="againObby">Prøv igen</button><button class="btn" id="shopNow">🎨 Køb ting</button></div>`, true);
-  const go = s => { closeModal(); buildCourse(s); respawn(true); toast(`Bane ${s}!`); };
+  const go = s => learnBreak(bandOf("mat"), () => { closeModal(); buildCourse(s); respawn(true); toast(`Bane ${s}!`); });
   $("#nextObby").onclick = () => go(st + 1);
   $("#againObby").onclick = () => go(st);
-  $("#shopNow").onclick = () => { go(st + 1); toggleShop(true); };
+  $("#shopNow").onclick = () => { closeModal(); buildCourse(st + 1); respawn(true); toggleShop(true); };
 }
 
 /* butik og figur */
@@ -2160,6 +2160,35 @@ function askQuestion(b, title, sub, onOk){
     btns.forEach(y => { y.disabled = true; if (y.textContent === q.a) y.classList.add("ok"); });
     if (x.textContent === q.a){ sfx.ok(); if (q.say) speak(q.say, q.lang); setTimeout(() => { closeModal(); sfx.win(); confetti(80); onOk(); }, 700); }
     else { x.classList.add("no"); sfx.bad(); setTimeout(() => askQuestion(b, title, sub, onOk), 1600); }
+  });
+}
+
+/* ================= læringspause (i stedet for reklamer) ================= */
+const BREAK_TITLES = ["Lille læringspause", "Hjernegymnastik", "Hurtigt spørgsmål", "Klog pause", "Én lille opgave"];
+function learnBreak(b, then){
+  const q = questionFor(b || 1, false), opts = shuffle([q.a, ...q.wrong]);
+  let done = false;
+  openModal(`<div><span style="display:inline-block;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:2px 12px;font-size:13px;text-transform:uppercase;letter-spacing:1.4px">📚 ${pick(BREAK_TITLES)}</span></div>
+    <p style="margin:0;color:var(--ink-soft)">Svar på opgaven, så går du videre. Rigtigt svar giver +1 🪙.</p>
+    ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
+    <div class="q-text" style="font-size:clamp(20px,4vw,28px)">${esc(q.q)}</div>
+    <div class="opts" id="bopts">${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>
+    <p class="fb" id="bfb"></p>
+    <div class="row" id="brow" hidden><button class="btn main" id="bnext">Videre ▶</button></div>`, true);
+  const go = () => { if (done) return; done = true; closeModal(); then(); };
+  const btns = [...$("#bopts").querySelectorAll(".opt")];
+  btns.forEach(x => x.onclick = () => {
+    btns.forEach(y => { y.disabled = true; if (y.textContent === q.a) y.classList.add("ok"); });
+    if (x.textContent === q.a){
+      S.coins = (S.coins || 0) + 1; save(); renderTop();
+      sfx.ok(); if (q.say) speak(q.say, q.lang); confetti(40);
+      $("#bfb").textContent = pick(["Rigtigt! +1 🪙", "Flot! +1 🪙", "Sådan! +1 🪙"]);
+      setTimeout(go, 1000);
+    } else {
+      x.classList.add("no"); sfx.bad();
+      $("#bfb").textContent = `Det rigtige svar er: ${q.a}`;
+      $("#brow").hidden = false; $("#bnext").onclick = go; $("#bnext").focus();
+    }
   });
 }
 

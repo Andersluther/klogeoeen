@@ -214,6 +214,11 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .worldcard h2{font-size:clamp(26px,4vw,34px)}
 .worldcard p{margin:4px 0 12px;font-weight:700;font-size:15px;line-height:1.35}
 .worldcard .row{justify-content:flex-start}
+.worldcard .btn{color:var(--ink)}
+.worldcard .wmeta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.worldcard .wmeta span{background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:14px;font-variant-numeric:tabular-nums}
+.stages{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:14px 8px}
+.stages .node .dot{width:60px}
 .worldcard .new{display:inline-block;background:var(--sun);color:var(--ink);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-size:13px;text-transform:uppercase;letter-spacing:1.4px}
 
 /* blokverden: 3D-visning */
@@ -308,7 +313,8 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
       <div>
         <span class="new">Ny · 3D</span>
         <h2 class="outline">Blokverdenen</h2>
-        <p>Design din egen figur, løb og hop gennem forhindringsbaner, og svar rigtigt ved hvert checkpoint. Mønter fra spillene køber hatte og superkræfter.</p>
+        <p>Design din egen figur, løb og hop gennem forhindringsbaner, og svar rigtigt ved hvert checkpoint. Hver bane giver op til 3 stjerner, og mønter køber hatte og superkræfter.</p>
+        <div class="wmeta" id="wmeta"></div>
         <div class="row"><button class="btn main" id="worldBtn">Gå ind i verdenen ▶</button><button class="btn" id="avatarBtn">🎨 Min figur</button></div>
       </div>
     </div>
@@ -355,7 +361,7 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 <section id="world" hidden>
   <div id="worldCanvas"></div>
   <div class="hud">
-    <div class="grp"><button class="chip" id="worldBack">← Til øen</button><span class="chip" id="wStage">Bane 1</span></div>
+    <div class="grp"><button class="chip" id="worldBack">← Til øen</button><button class="chip" id="stagesBtn">🗺️ Baner</button><span class="chip" id="wStage">Bane 1</span></div>
     <div class="grp"><span class="chip">🪙 <b id="wCoins">0</b></span><button class="chip" id="shopBtn">🎨 Figur</button></div>
   </div>
   <div class="toast" id="toast"></div>
@@ -795,6 +801,8 @@ function renderTop(){
   $("#pname").textContent = S.name || "Spiller";
   $("#starCount").textContent = totalStars();
   $("#coinCount").textContent = S.coins || 0;
+  const bk = Object.keys(S.prog).filter(k => k.startsWith("blok-"));
+  $("#wmeta").innerHTML = `<span><span class="star">★</span> ${bk.reduce((a,k)=>a+S.prog[k],0)} i Blokverdenen</span><span>Bane ${bk.length}/${Math.max(S.obby||1, bk.length)} klaret</span>`;
   $("#soundBtn").textContent = S.sound ? "🔊 Lyd" : "🔇 Lyd";
 }
 function bandOf(id){ return S.band[id] || 1; }
@@ -1465,14 +1473,36 @@ async function enterWorld(openShop){
     $("#closeM").onclick = closeModal; return;
   }
   if (!W) initWorld();
-  if (W.stage !== S.obby) buildCourse(S.obby);
   respawn(true);
   W.running = true; W.last = 0; W.keys = {};
   resizeWorld(); updateHud();
   cancelAnimationFrame(W.raf); W.raf = requestAnimationFrame(loop);
   toggleShop(!!openShop);
-  if (!openShop) toast(`Bane ${S.obby}: følg platformene mod nord!`);
+  if (!openShop) toast(`Bane ${W.stage}: følg platformene mod nord!`);
 }
+$("#stagesBtn").onclick = () => { sfx.pop(); showStages(); };
+function showStages(){
+  W.keys = {}; W.joy = {x:0,y:0}; resetJoy();
+  const max = S.obby, n = Math.max(10, max + 1);
+  let html = "";
+  for (let s = 1; s <= n; s++){
+    const open = s <= max, st = S.prog[`blok-1-${s}`] || 0;
+    const cls = !open ? "locked" : st ? "done" : "cur";
+    html += `<button class="node ${cls}" data-s="${s}" ${open ? "" : 'aria-disabled="true"'} aria-label="Bane ${s}${open ? `, ${st} stjerner` : ", låst"}">
+      <span class="dot">${open ? s : "🔒"}</span><span class="st">${open ? [1,2,3].map(k => `<span class="${k<=st?"star":"off"}">★</span>`).join("") : ""}</span></button>`;
+  }
+  openModal(`<h2>Forhindringsbaner</h2>
+    <p style="margin:0;color:var(--ink-soft)">3 ★: ingen forkerte svar og højst 2 fald. Når du når målet, låser du næste bane op.</p>
+    <div class="stages" id="stageList">${html}</div>
+    <div class="row"><button class="btn" id="closeM">Luk</button></div>`, true);
+  $("#closeM").onclick = closeModal;
+  $("#stageList").onclick = e => {
+    const b = e.target.closest(".node"); if (!b) return;
+    if (b.classList.contains("locked")){ sfx.bad(); return; }
+    closeModal(); buildCourse(+b.dataset.s); respawn(true); toast(`Bane ${W.stage}!`);
+  };
+}
+function stageStars(){ return Math.max(1, 3 - (W.wrong >= 1 ? 1 : 0) - (W.wrong >= 3 ? 1 : 0) - (W.falls > 2 ? 1 : 0) - (W.falls > 6 ? 1 : 0)); }
 function leaveWorld(then){
   if (W){ W.running = false; cancelAnimationFrame(W.raf); W.keys = {}; }
   toggleShop(false); closeModal();
@@ -1491,7 +1521,7 @@ function toast(msg){
 }
 function updateHud(){
   $("#wCoins").textContent = S.coins;
-  $("#wStage").textContent = `Bane ${S.obby} · checkpoint ${Math.max(0, W ? W.cp+1 : 0)}/${CPS}`;
+  $("#wStage").textContent = W ? `Bane ${W.stage} · checkpoint ${W.cp+1}/${CPS} · ${"★".repeat(stageStars())}` : "";
   renderTop();
 }
 function seeded(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
@@ -1589,7 +1619,7 @@ function buildAvatar(){
 function buildCourse(stage){
   const T = THREE;
   if (W.course){ W.scene.remove(W.course); W.colliders = W.colliders.filter(c => !c.course); }
-  W.kills = []; W.movers = []; W.coins = []; W.cps = []; W.cp = -1; W.done = false; W.stage = stage;
+  W.kills = []; W.movers = []; W.coins = []; W.cps = []; W.cp = -1; W.done = false; W.stage = stage; W.falls = 0; W.wrong = 0;
   const g = new T.Group(); W.course = g; W.scene.add(g);
   const R = seeded(stage * 7919 + 3);
   const COLORS = ["#ff6a55","#ffc22e","#3d9bff","#7a5cff","#ff7eb6","#17b3a3","#ff9a3c"];
@@ -1724,10 +1754,10 @@ function step(dt){
   for (const c of W.kills){
     const mp = c.m.position;
     if (Math.abs(p.x - mp.x) < c.w/2 + PR*.6 && Math.abs(p.z - mp.z) < c.d/2 + PR*.6 && p.y < mp.y + c.h/2 && p.y + PH > mp.y - c.h/2){
-      sfx.bad(); toast("Av! Rød lava!"); respawn(); return;
+      sfx.bad(); toast("Av! Rød lava!"); W.falls++; respawn(); updateHud(); return;
     }
   }
-  if (p.y < -5){ sfx.bad(); toast("Plask! Prøv igen"); respawn(); return; }
+  if (p.y < -5){ sfx.bad(); toast("Plask! Prøv igen"); if (W.p.z < -18) W.falls++; respawn(); updateHud(); return; }
   // mønter
   for (const m of W.coins){
     if (m.visible && Math.abs(m.position.x - p.x) < 1 && Math.abs(m.position.z - p.z) < 1 && Math.abs(m.position.y - (p.y + 1)) < 1.4){
@@ -1811,23 +1841,34 @@ function askGate(){
       S.coins += 3; save(); updateHud();
       setTimeout(() => { closeModal(); toast(`Checkpoint ${W.cp+1} gemt! +3 🪙`); confetti(60); }, 700);
     } else {
-      x.classList.add("no"); sfx.bad();
+      x.classList.add("no"); sfx.bad(); W.wrong++; updateHud();
       setTimeout(askGate, 1700);
     }
   });
 }
 function stageDone(){
   W.done = true; W.keys = {}; W.joy = {x:0,y:0}; resetJoy();
-  const prize = 20 + S.obby * 5;
-  S.coins += prize; const was = S.obby; S.obby++; save(); updateHud();
+  const st = W.stage, key = `blok-1-${st}`, prev = S.prog[key] || 0, stars = stageStars();
+  const before = Math.min(STICKERS.length, Math.floor(totalStars()/5));
+  S.prog[key] = Math.max(prev, stars);
+  const fresh = STICKERS.slice(before, Math.min(STICKERS.length, Math.floor(totalStars()/5)));
+  const prize = prev ? 5 + stars * 2 : 20 + st * 5;
+  S.coins += prize;
+  const unlocked = st === S.obby; if (unlocked) S.obby++;
+  save(); updateHud();
   sfx.win(); confetti(200);
-  openModal(`<h2>Du klarede bane ${was}!</h2>
-    <div class="bigstars"><span class="on">🏆</span></div>
-    <p style="margin:0;font-size:18px">+${prize} 🪙</p>
-    <p style="margin:0;color:var(--ink-soft)">Næste forhindringsbane er længere og har nye udfordringer.</p>
-    <div class="row"><button class="btn main" id="nextObby">Bane ${S.obby} ▶</button><button class="btn" id="shopNow">🎨 Køb ting</button></div>`, true);
-  $("#nextObby").onclick = () => { closeModal(); buildCourse(S.obby); respawn(true); toast(`Bane ${S.obby}!`); };
-  $("#shopNow").onclick = () => { closeModal(); buildCourse(S.obby); respawn(true); toggleShop(true); };
+  const head = stars === 3 ? "Perfekt løb!" : stars === 2 ? "Flot klaret!" : "I mål!";
+  openModal(`<h2>${head}</h2>
+    <div class="bigstars" aria-label="${stars} af 3 stjerner">${[1,2,3].map(i=>`<span class="${i<=stars?"on":""}">★</span>`).join("")}</div>
+    <p style="margin:0;font-size:18px">Bane ${st} klaret · ${W.wrong} forkerte svar · ${W.falls} fald<br>+${prize} 🪙${stars > prev && prev ? " · Ny rekord!" : ""}</p>
+    ${stars < 3 ? `<p style="margin:0;color:var(--ink-soft)">3 ★ kræver ingen forkerte svar og højst 2 fald.</p>` : ""}
+    ${unlocked ? `<div class="newstick">Bane ${st+1} er låst op! 🔓</div>` : ""}
+    ${fresh.length ? `<div class="newstick">Nyt klistermærke!<b>${fresh.join(" ")}</b></div>` : nextStickerHTML()}
+    <div class="row"><button class="btn main" id="nextObby">Bane ${st+1} ▶</button><button class="btn" id="againObby">Prøv igen</button><button class="btn" id="shopNow">🎨 Køb ting</button></div>`, true);
+  const go = s => { closeModal(); buildCourse(s); respawn(true); toast(`Bane ${s}!`); };
+  $("#nextObby").onclick = () => go(st + 1);
+  $("#againObby").onclick = () => go(st);
+  $("#shopNow").onclick = () => { go(st + 1); toggleShop(true); };
 }
 
 /* butik og figur */

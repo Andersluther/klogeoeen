@@ -1,5 +1,5 @@
 // Onkel A's Ø service worker: virker offline og henter nye versioner i baggrunden.
-const CACHE = "klogeoeen-03f13d8177";
+const CACHE = "klogeoeen-23a1291127";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {

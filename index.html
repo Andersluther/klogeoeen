@@ -162,6 +162,23 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
 .newpiece{animation:drop .45s ease-out}
+.ttt-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:720px){ .ttt-wrap{grid-template-columns:minmax(0,1fr)} }
+.ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(330px,100%);margin:0 auto}
+.ttt .cell{aspect-ratio:1;border:3px solid var(--ink);border-radius:16px;background:#fff;font-size:clamp(36px,9vw,60px);box-shadow:3px 3px 0 var(--ink);padding:0}
+.ttt .cell:not(:disabled):hover{background:var(--sand)}
+.ws-wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:720px){ .ws-wrap{grid-template-columns:minmax(0,1fr)} }
+.ws{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:3px;width:min(460px,100%);margin:0 auto}
+.wc{aspect-ratio:1;border:2px solid var(--ink);border-radius:8px;background:#fff;font-family:var(--display);font-size:clamp(14px,3.6vw,22px);padding:0}
+.wc.sel{background:var(--sun)} .wc.found{background:#b9ecc8} .wc.hint{background:var(--rose)}
+.wlist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;font-size:18px;letter-spacing:1px}
+.wlist li.got{text-decoration:line-through;color:var(--good)}
+.sudo-wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+.sudo{display:grid;grid-template-columns:repeat(var(--n),1fr);width:min(380px,100%);border:4px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--ink);gap:1px}
+.sc{aspect-ratio:1;border:none;background:#fff;font-family:var(--display);font-size:clamp(20px,6vw,34px);padding:0}
+.sc.given{background:var(--sand);color:var(--ink)} .sc.sel{background:#d9cfff} .sc.bad{background:#ffd9d3;color:var(--bad)}
+.sc.br{border-right:3px solid var(--ink)} .sc.bb{border-bottom:3px solid var(--ink)}
 @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .wtimer{width:min(420px,100%)}
 
@@ -835,7 +852,7 @@ const langQuiz = (pool, langName, lang) => (b, d, n) => shuffle(pool[b]).slice(0
    Hvert fag har en plan med 10 baner; hver bane er en spiltype. */
 const TYPEINFO = {meteor:["☄️","Meteorregn"], clock:["⏰","Klokken"], sort:["🗂️","Sortering"], memory:["🃏","Memory"],
   quiz:["❓","Quiz"], words:["🔤","Ordbygger"], drill:["➕","Regnestykker"], typing:["⌨️","Stav selv"], timeline:["⏳","Rækkefølge"],
-  runner:["🏃","Løb"], build:["🏠","Byg huset"], cook:["🍕","Køkken"], style:["💄","Styling"]};
+  runner:["🏃","Løb"], build:["🏠","Byg huset"], ttt:["❌","Kryds og bolle"], hang:["⛄","Snemanden"], wsearch:["🔍","Ordjagt"], sudoku:["🧩","Sudoku"], snake:["🐍","Slangen"], cook:["🍕","Køkken"], style:["💄","Styling"]};
 /* ---------- Byggeri ---------- */
 const DIGGER = `<svg viewBox="0 0 120 90" width="1.35em" height="1em" style="vertical-align:middle" aria-label="Gravemaskine"><rect x="8" y="66" width="62" height="16" rx="8" fill="#2a2a33"/><circle cx="18" cy="74" r="5" fill="#666"/><circle cx="60" cy="74" r="5" fill="#666"/><rect x="12" y="44" width="54" height="22" rx="3" fill="#ffc22e" stroke="#1d2742" stroke-width="2"/><rect x="40" y="24" width="24" height="22" rx="3" fill="#ffc22e" stroke="#1d2742" stroke-width="2"/><rect x="45" y="28" width="15" height="12" rx="2" fill="#bfe6f5"/><path d="M64 46 L92 18 L100 24 L74 52Z" fill="#f2a60f" stroke="#1d2742" stroke-width="2"/><path d="M92 18 L112 40 L104 46 L88 28Z" fill="#f2a60f" stroke="#1d2742" stroke-width="2"/><path d="M100 42 L118 50 L112 64 L96 56Z" fill="#7a7f8c" stroke="#1d2742" stroke-width="2"/></svg>`;
 const BYG = {
@@ -941,6 +958,14 @@ const CATS = [
      {type:"sort", name:"Byggepladsen", art:"🗂️", desc:"Værktøj eller maskine, sikkerhedsudstyr, materialer og fag.", cfg:{sets:BYGSORT}},
      {type:"quiz", name:"Byggeregning", art:"📐", desc:"Tæl mursten, regn planker og skruer, og find m² og meter.", cfg:{make:bygMath}, v:"calc"},
    ]},
+  {id:"klas", name:"Klassiske spil", art:"🎲", c:"var(--grape)", map:"#d9cfff", desc:"Kryds og bolle, Snemanden, Ordjagt, Mini-sudoku og Slangen. Alle med læring bygget ind.",
+   tracks:[
+     {type:"ttt", name:"Kryds og bolle", art:"❌", desc:"Spil mod computeren. Svar rigtigt for at sætte din brik."},
+     {type:"hang", name:"Snemanden", art:"⛄", desc:"Gæt ordet bogstav for bogstav, før snemanden smelter."},
+     {type:"wsearch", name:"Ordjagt", art:"🔍", desc:"Find de skjulte ord i bogstavgitteret."},
+     {type:"sudoku", name:"Mini-sudoku", art:"🧩", desc:"Frugt-sudoku for de mindste, tal-sudoku 4×4 og 6×6 for de større."},
+     {type:"snake", name:"Slangen", art:"🐍", desc:"Styr slangen og spis kun de rigtige tal, fx lige tal eller tal i 3-tabellen."},
+   ]},
   {id:"vid", name:"Geografi", art:"🌍", c:"var(--leaf)", map:"#c3ecd0", desc:"Quiz om verden, hovedstæder og sortering af lande og byer.",
    tracks:[
      {type:"quiz", name:"Jorden rundt", art:"🌍", desc:"Dyr, lande, planeter og Danmark.", cfg:{bank:QUIZ}},
@@ -970,7 +995,7 @@ function buildSpec(s, b, d){
   return Object.assign({type, k, ico: d === LEVELS ? "👑" : TYPEINFO[type][0]}, typeof g === "function" ? g(b,k,d) : (g || {}));
 }
 const RUNNERS = {meteor:playMath, clock:playClock, words:playWords, memory:playMemory, quiz:playQuiz, sort:playSort, timeline:playTimeline,
-  drill:playDrill, typing:playTyping, build:playBuild, runner:playRunner, cook:playCook, style:playStyle};
+  drill:playDrill, typing:playTyping, build:playBuild, ttt:playTTT, hang:playHang, wsearch:playWordSearch, sudoku:playSudoku, snake:playSnake, runner:playRunner, cook:playCook, style:playStyle};
 
 /* ================= hub ================= */
 function renderTop(){
@@ -2322,6 +2347,286 @@ function playBuild(stage, b, d){
   }
   draw(false); ask();
   return () => timers.forEach(clearTimeout);
+}
+
+/* ================= KLASSISKE SPIL ================= */
+/* Kryds og bolle: svar rigtigt for at sætte din brik */
+function playTTT(stage, b, d){
+  const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  let board = Array(9).fill(""), phase = "ask", wrong = 0, timers = [], q = null, over = false;
+  stage.innerHTML = `<div class="ttt-wrap">
+    <div class="ttt" id="ttt">${board.map((_,i) => `<button class="cell" data-i="${i}" aria-label="Felt ${i+1}"></button>`).join("")}</div>
+    <div class="quiz" style="gap:10px"><p class="fb" id="tmsg"></p><div class="q-text" id="tq" style="font-size:clamp(20px,4vw,28px)"></div><div class="opts" id="topts"></div></div></div>`;
+  const winner = () => { for (const [a,c,e] of LINES) if (board[a] && board[a] === board[c] && board[a] === board[e]) return board[a]; return board.every(Boolean) ? "draw" : null; };
+  const draw = () => document.querySelectorAll("#ttt .cell").forEach((c,i) => { c.textContent = board[i] === "X" ? "❌" : board[i] === "O" ? "⭕" : ""; c.disabled = phase !== "place" || !!board[i]; });
+  function cpuMove(){
+    const free = board.map((v,i) => v ? -1 : i).filter(i => i >= 0);
+    const smart = Math.random() < Math.min(.9, .2 + d * .08);
+    const find = sym => { for (const L of LINES){ const vals = L.map(i => board[i]); if (vals.filter(v => v === sym).length === 2 && vals.includes("")) return L[vals.indexOf("")]; } return -1; };
+    let m = -1;
+    if (smart){ m = find("O"); if (m < 0) m = find("X"); if (m < 0 && !board[4]) m = 4; }
+    if (m < 0) m = pick(free);
+    board[m] = "O";
+  }
+  function check(){
+    const w = winner(); if (!w) return false;
+    over = true; draw();
+    const stars = w === "X" ? (wrong <= 1 ? 3 : 2) : w === "draw" ? 1 : 0;
+    if (w === "X"){ sfx.win(); confetti(120); }
+    timers.push(setTimeout(() => finish(stars, w === "X" ? `Du vandt! ${wrong} forkerte svar.` : w === "draw" ? "Uafgjort! Prøv at vinde næste gang." : "Computeren vandt denne gang."), 1100));
+    return true;
+  }
+  function ask(){
+    if (over) return;
+    phase = "ask"; draw();
+    q = questionFor(b, false); const opts = shuffle([q.a, ...q.wrong]);
+    $("#tmsg").textContent = "Svar rigtigt for at sætte dit ❌.";
+    $("#tq").innerHTML = (q.visual ? `<div class="q-visual">${q.visual}</div>` : "") + esc(q.q);
+    $("#topts").innerHTML = opts.map(o => `<button class="opt">${esc(o)}</button>`).join("");
+    $("#topts").querySelectorAll(".opt").forEach(x => x.onclick = () => {
+      $("#topts").querySelectorAll(".opt").forEach(y => { y.disabled = true; if (y.textContent === q.a) y.classList.add("ok"); });
+      if (x.textContent === q.a){ sfx.ok(); phase = "place"; $("#tmsg").textContent = "Rigtigt! Vælg et felt til dit ❌."; draw(); }
+      else { x.classList.add("no"); sfx.bad(); wrong++; $("#tmsg").textContent = `Forkert, svaret var ${q.a}. Computeren får din tur.`;
+        timers.push(setTimeout(() => { cpuMove(); if (!check()) ask(); }, 1500)); }
+    });
+  }
+  $("#ttt").onclick = e => {
+    const c = e.target.closest(".cell"); if (!c || phase !== "place" || board[+c.dataset.i]) return;
+    board[+c.dataset.i] = "X"; sfx.pop(); phase = "wait"; draw();
+    if (check()) return;
+    $("#topts").innerHTML = ""; $("#tq").textContent = ""; $("#tmsg").textContent = "Computeren tænker …";
+    timers.push(setTimeout(() => { cpuMove(); if (!check()) ask(); }, 700));
+  };
+  setStatus("❌ mod ⭕");
+  ask();
+  return () => timers.forEach(clearTimeout);
+}
+
+/* Snemanden: gæt ordet før snemanden smelter */
+function snowSVG(left, max){
+  const parts = [
+    `<circle cx="100" cy="190" r="48" fill="#fff" stroke="#1d2742" stroke-width="3"/>`,
+    `<circle cx="100" cy="120" r="34" fill="#fff" stroke="#1d2742" stroke-width="3"/>`,
+    `<circle cx="100" cy="66" r="24" fill="#fff" stroke="#1d2742" stroke-width="3"/>`,
+    `<circle cx="92" cy="62" r="3" fill="#1d2742"/><circle cx="108" cy="62" r="3" fill="#1d2742"/>`,
+    `<path d="M100 68 L122 72 L100 74Z" fill="#ff9a3c"/>`,
+    `<rect x="80" y="30" width="40" height="14" fill="#1d2742"/><rect x="86" y="10" width="28" height="22" fill="#1d2742"/>`,
+    `<path d="M70 110 L40 90 M130 110 L160 90" stroke="#7a4a2a" stroke-width="4"/>`,
+    `<circle cx="100" cy="110" r="3" fill="#1d2742"/><circle cx="100" cy="124" r="3" fill="#1d2742"/>`,
+  ].slice(0, Math.max(1, Math.round(left / max * 8)));
+  return `<svg viewBox="0 0 200 250" style="width:min(180px,45vw);height:auto" aria-label="Snemand, ${left} forsøg tilbage">
+    <ellipse cx="100" cy="240" rx="${60 + (max-left)*6}" ry="8" fill="#bfe6f5"/>${parts.join("")}</svg>`;
+}
+function playHang(stage, b, d){
+  const ROUNDS = 3, max = Math.max(5, 9 - Math.floor(d/3));
+  const pool = WORDS[b].concat(b > 1 ? BYG[b].filter(([,e]) => !e.startsWith("<")) : []);
+  const list = shuffle(pool).slice(0, ROUNDS);
+  let i = 0, solved = 0, misses = 0, timers = [];
+  function round(){
+    if (i >= ROUNDS){
+      const stars = solved === ROUNDS && misses <= ROUNDS*2 ? 3 : solved === ROUNDS ? 2 : solved >= 2 ? 1 : 0;
+      return finish(stars, `Du gættede ${solved} af ${ROUNDS} ord · ${misses} forkerte bogstaver.`);
+    }
+    const [word, emoji] = list[i]; const guessed = new Set(); let left = max, done = false;
+    setStatus(`Ord ${i+1}/${ROUNDS}`);
+    stage.innerHTML = `<div class="words">
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center"><div id="snow"></div>
+        ${b === 1 || d <= 5 ? `<div class="pic" aria-hidden="true" title="Hint">${emoji}</div>` : `<button class="btn" id="hhint">💡 Vis billede</button>`}</div>
+      <div class="slots" id="hslots"></div><p class="fb" id="hfb">Gæt et bogstav.</p>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;width:100%" id="hkb">
+        ${KEYROWS.da.map(r => `<div style="display:flex;gap:4px;justify-content:center;width:100%">${r.split("").map(c => `<button class="tile" style="width:clamp(26px,8vw,46px);height:clamp(40px,9vw,50px);font-size:clamp(16px,4vw,22px)" data-c="${c}">${c}</button>`).join("")}</div>`).join("")}
+      </div></div>`;
+    const draw = () => { $("#snow").innerHTML = snowSVG(left, max);
+      $("#hslots").innerHTML = word.split("").map(c => `<span class="slot ${guessed.has(c) ? "filled" : ""}">${guessed.has(c) || done ? c : ""}</span>`).join(""); };
+    const hh = $("#hhint"); if (hh) hh.onclick = () => { hh.outerHTML = `<div class="pic" aria-hidden="true">${emoji}</div>`; };
+    $("#hkb").onclick = e => {
+      const x = e.target.closest("button"); if (!x || x.disabled || done) return;
+      const c = x.dataset.c; x.disabled = true; guessed.add(c);
+      if (word.includes(c)){ sfx.ok(); x.style.background = "var(--good)"; }
+      else { sfx.bad(); left--; misses++; x.style.background = "var(--lock)"; }
+      if (word.split("").every(ch => guessed.has(ch))){ done = true; solved++; setScore(score + 20 + left*3); sfx.win(); confetti(80); $("#hfb").textContent = "Du fandt ordet! ⛄"; }
+      else if (left <= 0){ done = true; $("#hfb").textContent = `Snemanden smeltede. Ordet var ${word}.`; }
+      draw();
+      if (done){ i++; timers.push(setTimeout(round, 1800)); }
+    };
+    draw();
+  }
+  const onKey = e => { if (!$("#veil").hidden || !$("#hkb")) return; const c = e.key.toUpperCase(); const btn = $(`#hkb [data-c="${c}"]`); if (btn) btn.click(); };
+  addEventListener("keydown", onKey);
+  round();
+  return () => { timers.forEach(clearTimeout); removeEventListener("keydown", onKey); };
+}
+
+/* Ordjagt: find de skjulte ord */
+function playWordSearch(stage, b, d){
+  const N = b === 1 ? 6 : b === 2 ? 8 : 10, count = b === 1 ? 3 : b === 2 ? 4 : (d >= 6 ? 6 : 5);
+  const dirs = b === 1 ? [[0,1]] : b === 2 ? [[0,1],[1,0]] : [[0,1],[1,0],[1,1],[-1,1]];
+  const ALPH = "ABDEFGHIKLMNOPRSTUVÆØÅ";
+  let grid, placed;
+  for (let attempt = 0; attempt < 50; attempt++){
+    grid = Array.from({length:N}, () => Array(N).fill("")); placed = [];
+    const cands = shuffle(WORDS[b].filter(([w]) => w.length <= N && w.length >= 2));
+    for (const [w, e] of cands){
+      if (placed.length >= count) break;
+      let ok = false;
+      for (let t = 0; t < 60 && !ok; t++){
+        const [dr, dc] = pick(dirs), r0 = rnd(0, N-1), c0 = rnd(0, N-1);
+        const cells = w.split("").map((_,k) => [r0 + dr*k, c0 + dc*k]);
+        if (cells.every(([r,c], k) => r >= 0 && r < N && c >= 0 && c < N && (!grid[r][c] || grid[r][c] === w[k]))){
+          cells.forEach(([r,c], k) => grid[r][c] = w[k]); placed.push({w, e, cells, found:false}); ok = true;
+        }
+      }
+    }
+    if (placed.length >= count) break;
+  }
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!grid[r][c]) grid[r][c] = pick(ALPH.split(""));
+  let first = null, hints = 0, t0 = performance.now();
+  stage.innerHTML = `<div class="ws-wrap">
+    <div class="ws" id="ws" style="--n:${N}">${grid.flatMap((row,r) => row.map((ch,c) => `<button class="wc" data-r="${r}" data-c="${c}">${ch}</button>`)).join("")}</div>
+    <div><p style="margin:0 0 8px">Find ordene. Tryk på første og sidste bogstav.</p><ul class="wlist" id="wlist"></ul>
+    <div class="row" style="justify-content:flex-start;margin-top:10px"><button class="btn" id="wshint">💡 Hjælp</button></div><p class="fb" id="wsfb"></p></div></div>`;
+  const cellEl = (r,c) => $(`#ws [data-r="${r}"][data-c="${c}"]`);
+  const drawList = () => { $("#wlist").innerHTML = placed.map(p => `<li class="${p.found ? "got" : ""}">${p.e} ${p.found ? p.w : p.w.replace(/./g, "_ ")}</li>`).join("");
+    setStatus(`${placed.filter(p => p.found).length}/${placed.length} ord`); };
+  $("#ws").onclick = e => {
+    const x = e.target.closest(".wc"); if (!x) return;
+    const r = +x.dataset.r, c = +x.dataset.c;
+    if (!first){ first = [r,c]; x.classList.add("sel"); sfx.pop(); return; }
+    const [r0, c0] = first; cellEl(r0, c0).classList.remove("sel"); first = null;
+    const hit = placed.find(p => !p.found && ((p.cells[0][0] === r0 && p.cells[0][1] === c0 && p.cells.at(-1)[0] === r && p.cells.at(-1)[1] === c) ||
+                                               (p.cells.at(-1)[0] === r0 && p.cells.at(-1)[1] === c0 && p.cells[0][0] === r && p.cells[0][1] === c)));
+    if (hit){
+      hit.found = true; hit.cells.forEach(([rr,cc]) => cellEl(rr,cc).classList.add("found")); sfx.ok(); setScore(score + 20); drawList();
+      $("#wsfb").textContent = `Du fandt ${hit.w}!`;
+      if (placed.every(p => p.found)){
+        sfx.win(); confetti(140);
+        const secs = Math.round((performance.now() - t0) / 1000);
+        const stars = hints === 0 ? 3 : hints <= 2 ? 2 : 1;
+        setTimeout(() => finish(stars, `Alle ${placed.length} ord fundet på ${secs} sekunder · ${hints} hjælp brugt.`), 900);
+      }
+    } else { sfx.bad(); $("#wsfb").textContent = "Det var ikke et af ordene. Prøv igen."; }
+  };
+  $("#wshint").onclick = () => {
+    const p = placed.find(x => !x.found); if (!p) return;
+    hints++; const [r,c] = p.cells[0]; const el = cellEl(r,c); el.classList.add("hint"); setTimeout(() => el.classList.remove("hint"), 1500);
+    $("#wsfb").textContent = `${p.e} ${p.w} starter her.`;
+  };
+  drawList();
+  return () => {};
+}
+
+/* Mini-sudoku */
+function playSudoku(stage, b, d){
+  const n = (b === 1 || (b === 2 && d < 6)) ? 4 : 6, br = 2, bc = n === 4 ? 2 : 3;
+  const SYM = b === 1 ? ["🍎","🍌","🍇","🍓"] : Array.from({length:n}, (_,k) => String(k+1));
+  // gyldigt gitter + blanding
+  let g = Array.from({length:n}, (_,r) => Array.from({length:n}, (_,c) => (bc*(r%br) + Math.floor(r/br) + c) % n));
+  const perm = shuffle([...Array(n).keys()]); g = g.map(row => row.map(v => perm[v]));
+  const bands = shuffle([...Array(n/br).keys()]).flatMap(bi => shuffle([...Array(br).keys()]).map(k => bi*br + k));
+  g = bands.map(r => g[r]);
+  const stacks = shuffle([...Array(n/bc).keys()]).flatMap(si => shuffle([...Array(bc).keys()]).map(k => si*bc + k));
+  g = g.map(row => stacks.map(c => row[c]));
+  const removeN = n === 4 ? Math.min(10, 5 + Math.floor(d/2)) : Math.min(22, 12 + d);
+  const given = Array.from({length:n}, () => Array(n).fill(true));
+  shuffle([...Array(n*n).keys()]).slice(0, removeN).forEach(k => given[Math.floor(k/n)][k%n] = false);
+  const cur = g.map((row,r) => row.map((v,c) => given[r][c] ? v : -1));
+  let sel = null, mistakes = 0;
+  stage.innerHTML = `<div class="sudo-wrap"><div class="sudo" id="sudo" style="--n:${n}">${cur.flatMap((row,r) => row.map((v,c) =>
+      `<button class="sc ${given[r][c] ? "given" : ""} ${(c+1) % bc === 0 && c < n-1 ? "br" : ""} ${(r+1) % br === 0 && r < n-1 ? "bb" : ""}" data-r="${r}" data-c="${c}" ${given[r][c] ? "disabled" : ""}>${v >= 0 ? SYM[v] : ""}</button>`)).join("")}</div>
+    <p style="margin:0;text-align:center">Hver række, kolonne og boks skal have ${b === 1 ? "hver frugt" : "hvert tal"} én gang. Vælg et tomt felt og tryk på ${b === 1 ? "en frugt" : "et tal"}.</p>
+    <div class="row" id="spad">${SYM.map((s,k) => `<button class="tile" style="background:var(--grape)" data-v="${k}">${s}</button>`).join("")}<button class="tile" style="background:var(--lock);color:var(--ink)" data-v="-1">⌫</button></div>
+    <p class="fb" id="sfb"></p></div>`;
+  setStatus(`${n}×${n}`);
+  const el = (r,c) => $(`#sudo [data-r="${r}"][data-c="${c}"]`);
+  $("#sudo").onclick = e => { const x = e.target.closest(".sc"); if (!x || x.disabled) return;
+    document.querySelectorAll("#sudo .sel").forEach(y => y.classList.remove("sel")); x.classList.add("sel"); sel = [+x.dataset.r, +x.dataset.c]; sfx.pop(); };
+  $("#spad").onclick = e => {
+    const x = e.target.closest("button"); if (!x || !sel) return;
+    const [r,c] = sel, v = +x.dataset.v, cellB = el(r,c);
+    if (v < 0){ cur[r][c] = -1; cellB.textContent = ""; cellB.classList.remove("bad"); return; }
+    cur[r][c] = v; cellB.textContent = SYM[v];
+    const conflict = (rr, cc, vv) => { for (let k = 0; k < n; k++){ if (k !== cc && cur[rr][k] === vv) return true; if (k !== rr && cur[k][cc] === vv) return true; }
+      const r0 = rr - rr % br, c0 = cc - cc % bc; for (let a = r0; a < r0 + br; a++) for (let z = c0; z < c0 + bc; z++) if ((a !== rr || z !== cc) && cur[a][z] === vv) return true; return false; };
+    if (conflict(r, c, v)){ mistakes++; cellB.classList.add("bad"); sfx.bad(); $("#sfb").textContent = "Den passer ikke her. Kig på rækken, kolonnen og boksen."; }
+    else { cellB.classList.remove("bad"); sfx.ok(); $("#sfb").textContent = ""; setScore(score + 5); }
+    if (cur.every((row,ri) => row.every((vv,ci) => vv >= 0 && !conflict(ri, ci, vv)))){
+      sfx.win(); confetti(150);
+      const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
+      setTimeout(() => finish(stars, `Sudokuen er løst! ${mistakes} fejl undervejs.`), 900);
+    }
+  };
+  return () => {};
+}
+
+/* Slangen: spis de rigtige tal */
+const SNAKE_RULES = {
+  1: [["lige tal", n => n % 2 === 0, 1, 12], ["tal større end 5", n => n > 5, 1, 10], ["tal mindre end 4", n => n < 4, 1, 9]],
+  2: [["tal i 2-tabellen", n => n % 2 === 0, 1, 30], ["tal i 5-tabellen", n => n % 5 === 0, 1, 50], ["ulige tal", n => n % 2 === 1, 1, 30], ["tal i 10-tabellen", n => n % 10 === 0, 1, 100]],
+  3: [["tal i 3-tabellen", n => n % 3 === 0, 1, 60], ["tal i 4-tabellen", n => n % 4 === 0, 1, 60], ["tal i 7-tabellen", n => n % 7 === 0, 1, 70], ["tal i 6-tabellen", n => n % 6 === 0, 1, 72]],
+};
+function playSnake(stage, b, d){
+  const [rname, rule, lo, hi] = SNAKE_RULES[b][(d-1) % SNAKE_RULES[b].length];
+  const G = 14, GOAL = 6 + Math.ceil(d/2), stepMs = Math.max(110, 260 - d*13);
+  let snake, dir, nextDir, items = [], lives = 3, eaten = 0, timer = 0, alive = true, paused = true;
+  stage.innerHTML = `<div class="snake-wrap"><div class="rq" style="position:static;transform:none;margin:0 auto 10px">Spis kun <b>${rname}</b> 🐍</div>
+    <canvas id="snk" width="560" height="560" style="width:min(100%,460px);aspect-ratio:1;display:block;margin:0 auto;border:3px solid var(--ink);border-radius:16px;background:#cfeec0;touch-action:none"></canvas>
+    <div class="rctl" style="position:static;transform:none;margin:10px auto 0;justify-content:center"><button data-a="l" aria-label="Venstre">◀</button><button data-a="u" aria-label="Op">▲</button><button data-a="d" aria-label="Ned">▼</button><button data-a="r" aria-label="Højre">▶</button></div>
+    <p class="fb" id="snfb">Tryk på en pil for at starte.</p></div>`;
+  const cv = $("#snk"), cx = cv.getContext("2d"), S2 = cv.width / G;
+  const reset = () => { snake = [[7,7],[7,6],[7,5]]; dir = [0,1]; nextDir = [0,1]; };
+  const free = () => { for (;;){ const p = [rnd(0,G-1), rnd(0,G-1)]; if (!snake.some(s => s[0] === p[0] && s[1] === p[1]) && !items.some(it => it.r === p[0] && it.c === p[1])) return p; } };
+  const goodNum = () => { for (;;){ const v = rnd(lo, hi); if (rule(v)) return v; } };
+  const badNum = () => { for (;;){ const v = rnd(lo, hi); if (!rule(v)) return v; } };
+  const spawn = good => { const [r,c] = free(); items.push({r, c, v: good ? goodNum() : badNum()}); };
+  const status = () => setStatus(`${heartsHTML(lives)} <span>${eaten}/${GOAL}</span>`);
+  function drawAll(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    for (let r = 0; r < G; r++) for (let c = 0; c < G; c++) if ((r+c) % 2){ cx.fillStyle = "#c2e6b1"; cx.fillRect(c*S2, r*S2, S2, S2); }
+    for (const it of items){ cx.fillStyle = "#fffaf0"; cx.strokeStyle = "#1d2742"; cx.lineWidth = 3; cx.beginPath(); cx.arc(it.c*S2+S2/2, it.r*S2+S2/2, S2*.46, 0, 7); cx.fill(); cx.stroke();
+      cx.fillStyle = "#1d2742"; cx.font = `900 ${S2*.5}px Nunito, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(it.v, it.c*S2+S2/2, it.r*S2+S2/2+1); }
+    snake.forEach(([r,c], k) => { cx.fillStyle = k === 0 ? "#2f8f46" : "#3fbf6a"; cx.fillRect(c*S2+2, r*S2+2, S2-4, S2-4);
+      if (k === 0){ cx.fillStyle = "#1d2742"; cx.fillRect(c*S2+S2*.25, r*S2+S2*.3, 5, 5); cx.fillRect(c*S2+S2*.65, r*S2+S2*.3, 5, 5); } });
+  }
+  function tick(){
+    if (!alive || paused) return;
+    dir = nextDir;
+    const head = [(snake[0][0] + dir[0] + G) % G, (snake[0][1] + dir[1] + G) % G];
+    if (snake.slice(0, -1).some(s => s[0] === head[0] && s[1] === head[1])){
+      lives--; sfx.bad(); status(); $("#snfb").textContent = "Av! Du bed dig selv i halen.";
+      if (lives <= 0) return end(false);
+      reset(); drawAll(); return;
+    }
+    snake.unshift(head);
+    const k = items.findIndex(it => it.r === head[0] && it.c === head[1]);
+    if (k >= 0){
+      const it = items.splice(k, 1)[0];
+      if (rule(it.v)){ eaten++; sfx.ok(); setScore(score + 10); $("#snfb").textContent = `${it.v} – rigtigt!`; if (eaten >= GOAL) return end(true); }
+      else { lives--; sfx.bad(); snake.pop(); $("#snfb").textContent = `${it.v} er ikke et af ${rname}.`; if (lives <= 0) return end(false); }
+      status();
+      spawn(items.filter(x => rule(x.v)).length < 2 || Math.random() < .5);
+    } else snake.pop();
+    drawAll();
+  }
+  function end(won){
+    alive = false; clearInterval(timer); drawAll();
+    if (won){ sfx.win(); confetti(140); }
+    const stars = won ? (lives === 3 ? 3 : 2) : eaten >= GOAL/2 ? 1 : 0;
+    setTimeout(() => finish(stars, won ? `Du spiste ${eaten} rigtige tal!` : `Du spiste ${eaten} af ${GOAL} rigtige tal.`), 800);
+  }
+  const turn = a => {
+    const m = {l:[0,-1], r:[0,1], u:[-1,0], d:[1,0]}[a]; if (!m) return;
+    if (m[0] === -dir[0] && m[1] === -dir[1]) return;
+    nextDir = m; if (paused){ paused = false; $("#snfb").textContent = ""; }
+  };
+  stage.querySelector(".rctl").onclick = e => { const x = e.target.closest("button"); if (x) turn(x.dataset.a); };
+  const onKey = e => { const a = {ArrowLeft:"l",KeyA:"l",ArrowRight:"r",KeyD:"r",ArrowUp:"u",KeyW:"u",ArrowDown:"d",KeyS:"d"}[e.code]; if (a && $("#veil").hidden){ turn(a); e.preventDefault(); } };
+  addEventListener("keydown", onKey);
+  let sx = 0, sy = 0;
+  cv.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; });
+  cv.addEventListener("pointerup", e => { const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return; turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : (dy > 0 ? "d" : "u")); });
+  reset(); spawn(true); spawn(true); spawn(false); spawn(false); status(); drawAll();
+  timer = setInterval(tick, stepMs);
+  return () => { alive = false; clearInterval(timer); removeEventListener("keydown", onKey); };
 }
 
 /* ================= MATEMATIK: Regnestykker ================= */

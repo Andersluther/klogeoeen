@@ -516,7 +516,7 @@ const STICKERS = ["🦄","🐉","🦖","🐙","🦊","🐼","🦁","🐸","🐢"
 const LEVELS = 10, KEY = "klogeoeen-v2";
 let S = {name:"", avatar:"🦊", sound:true, band:{}, prog:{}};
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch(e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} if (typeof cloudSchedule === "function") cloudSchedule(); };
 
 const $ = s => document.querySelector(s);
 const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
@@ -1031,7 +1031,7 @@ const RUNNERS = {meteor:playMath, clock:playClock, words:playWords, memory:playM
 /* ================= hub ================= */
 function renderTop(){
   $("#avatar").textContent = S.avatar;
-  $("#pname").textContent = S.name || "Spiller";
+  $("#pname").textContent = (S.name || "Spiller") + (typeof account === "function" && cloudOn() && account() ? " ☁️" : "");
   $("#starCount").textContent = totalStars();
   $("#coinCount").textContent = S.coins || 0;
   $("#rankName").textContent = `${RANKS[rankIdx()].name} · ${RANKS[rankIdx()].title}`;
@@ -1254,12 +1254,14 @@ function showProfile(){
       <div class="avs" id="avs">${AVATARS.map(a=>`<button type="button" data-a="${a}" aria-pressed="${a===av}">${a}</button>`).join("")}</div></div>
       <div class="row"><button class="btn main" type="submit">${S.name ? "Gem" : "Start eventyret"}</button></div>
     </form>
+    ${accountHTML()}
     <div class="newstick" style="text-align:left;display:flex;flex-direction:column;gap:8px">
       <b style="font-size:17px;display:block">📲 Flyt dine fremskridt</b>
       <span style="font-size:14px">${S.name ? "Lav en gem-kode og scan den med den nye telefon eller tablet." : "Har du spillet før på en anden enhed? Hent dine fremskridt med din gem-kode."}</span>
       <div class="row" style="justify-content:flex-start">${S.name ? `<button class="btn" type="button" id="mkSave">Lav gem-kode</button>` : ""}<button class="btn" type="button" id="ldSave">Indlæs gem-kode</button></div>
     </div>`);
   if ($("#mkSave")) $("#mkSave").onclick = showSaveCode;
+  wireAccount();
   $("#ldSave").onclick = () => showLoadCode();
   $("#avs").onclick = e => { const x = e.target.closest("button"); if (!x) return; av = x.dataset.a; sfx.pop();
     $("#avs").querySelectorAll("button").forEach(y => y.setAttribute("aria-pressed", String(y===x))); };
@@ -3319,6 +3321,130 @@ function showRanks(){
   $("#closeM").onclick = closeModal;
 }
 
+/* ================= BRUGERE: kaldenavn + pinkode, fremskridt gemmes i skyen ================= */
+// Udfyldes når Supabase-projektet er oprettet (URL og den offentlige "anon"-nøgle).
+var CLOUD_URL = "https://imvmxizbersuvsnswfyl.supabase.co", CLOUD_KEY = "sb_publishable_pzZlJCdc8M31zIU3HsKfqQ_XCYKNKKX";  // offentlig nøgle, kun adgang til oa_-funktionerne
+var ACC_KEY = "klogeoeen-konto", cloudTimer = 0, cloudDirty = false;
+const cloudOn = () => !!(CLOUD_URL && CLOUD_KEY) && !/claude\.ai|claudeusercontent|claude\.site/.test(location.hostname);
+function account(){ try { return JSON.parse(localStorage.getItem(ACC_KEY) || "null"); } catch(e){ return null; } }
+function setAccount(a){ try { a ? localStorage.setItem(ACC_KEY, JSON.stringify(a)) : localStorage.removeItem(ACC_KEY); } catch(e) {} }
+async function rpc(fn, body){
+  const res = await fetch(`${CLOUD_URL}/rest/v1/rpc/${fn}`, {method:"POST",
+    headers:Object.assign({"apikey":CLOUD_KEY, "Content-Type":"application/json"}, CLOUD_KEY.startsWith("eyJ") ? {"Authorization":`Bearer ${CLOUD_KEY}`} : {}), body:JSON.stringify(body)});
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(j.message || "net");
+  if (j && j.error) throw new Error(j.error);
+  return j;
+}
+const CLOUD_MSG = {optaget:"Det kaldenavn er taget. Prøv et andet.", forkert:"Forkert kaldenavn eller pinkode.", laast:"For mange forkerte forsøg. Vent 15 minutter.",
+  pin:"Pinkoden skal være 4 tal.", navn:"Kaldenavnet skal være 2–20 tegn.", token:"Du er blevet logget ud. Log ind igen.", for_stor:"Fremskridtene er for store til at gemme."};
+const cloudErr = e => CLOUD_MSG[e.message] || "Ingen forbindelse. Prøv igen, når du har internet.";
+function mergeData(a, b){
+  const out = Object.assign({}, a, b);
+  out.prog = Object.assign({}, b.prog || {});
+  for (const [k, v] of Object.entries(a.prog || {})) out.prog[k] = Math.max(v, out.prog[k] || 0);
+  out.unlocks = [...new Set([...(b.unlocks || []), ...(a.unlocks || [])])];
+  out.owned = [...new Set([...(b.owned || []), ...(a.owned || [])])];
+  out.obby = Math.max(a.obby || 1, b.obby || 1);
+  out.coins = Math.max(a.coins || 0, b.coins || 0);
+  out.band = Object.assign({}, a.band || {}, b.band || {});
+  return out;
+}
+function applyData(d){
+  const keepSound = S.sound;
+  S = Object.assign({name:"", avatar:"🦊", sound:true, band:{}, prog:{}, coins:0, owned:["none","cap"], unlocks:[], obby:1, theme:"oe"}, d, {sound:keepSound});
+  S.look = Object.assign({skin:SKINS[0], shirt:CLOTH[0], pants:CLOTH[7], hat:"cap"}, d.look || {});
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {}
+  applyTheme(); renderHub();
+  if (W){ buildAvatar(); buildCourse(S.obby); }
+}
+function cloudSchedule(){
+  if (!cloudOn() || !account()) return;
+  cloudDirty = true; clearTimeout(cloudTimer); cloudTimer = setTimeout(cloudPush, 2500);
+}
+async function cloudPush(){
+  const a = account(); if (!cloudOn() || !a || !cloudDirty) return;
+  try { await rpc("oa_save", {p_token:a.token, p_data:S}); cloudDirty = false; renderTop(); }
+  catch(e){ if (e.message === "token"){ setAccount(null); renderTop(); } }
+}
+async function cloudPull(){
+  const a = account(); if (!cloudOn() || !a) return;
+  try { const r = await rpc("oa_load", {p_token:a.token}); applyData(mergeData(S, r.data || {})); cloudDirty = true; cloudPush(); }
+  catch(e){ if (e.message === "token"){ setAccount(null); renderTop(); } }
+}
+addEventListener("online", () => cloudPush());
+addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") cloudPush(); else cloudPull(); });
+
+function accountHTML(){
+  if (!cloudOn()) return "";
+  const a = account();
+  return `<div class="newstick" style="text-align:left;display:flex;flex-direction:column;gap:8px">
+    <b style="font-size:17px;display:block">👤 Din bruger</b>
+    ${a ? `<span style="font-size:14px">Du er logget ind som <b style="display:inline;font-size:14px">${esc(a.username)}</b>. Dine fremskridt gemmes automatisk ☁️ og kan hentes på alle enheder.</span>
+      <div class="row" style="justify-content:flex-start"><button class="btn" type="button" id="accOut">Log ud</button></div>`
+      : `<span style="font-size:14px">Opret en bruger med kaldenavn og pinkode, så dine fremskridt gemmes og kan hentes på andre enheder.</span>
+      <div class="row" style="justify-content:flex-start"><button class="btn main" type="button" id="accNew">Opret bruger</button><button class="btn" type="button" id="accIn">Log ind</button></div>`}
+  </div>`;
+}
+function wireAccount(){
+  if ($("#accNew")) $("#accNew").onclick = () => accountForm("new");
+  if ($("#accIn")) $("#accIn").onclick = () => accountForm("login");
+  if ($("#accOut")) $("#accOut").onclick = confirmLogout;
+}
+function accountForm(mode){
+  const isNew = mode === "new";
+  openModal(`<h2>${isNew ? "Opret bruger" : "Log ind"}</h2>
+    <form id="accF" style="display:flex;flex-direction:column;gap:14px">
+      <label class="field" for="accName">Kaldenavn<input id="accName" maxlength="20" autocomplete="username" value="${isNew ? esc(S.name || "") : ""}" placeholder="Fx Viga"></label>
+      <label class="field" for="accPin">${isNew ? "Vælg en pinkode (4 tal)" : "Pinkode"}<input id="accPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="${isNew ? "new-password" : "current-password"}" placeholder="••••"></label>
+      ${isNew ? `<p style="margin:0;font-size:14px;color:var(--ink-soft)">Husk pinkoden, eller bed en voksen skrive den ned. Brug ikke dit rigtige efternavn.</p>` : ""}
+      <p class="fb" id="accFb"></p>
+      <div class="row"><button class="btn" type="button" id="accCancel">Annullér</button><button class="btn main" type="submit" id="accGo">${isNew ? "Opret" : "Log ind"}</button></div>
+    </form>`, true);
+  $("#accCancel").onclick = () => { closeModal(); showProfile(); };
+  setTimeout(() => { const n = $("#accName"); if (n) (n.value ? $("#accPin") : n).focus(); }, 50);
+  $("#accF").onsubmit = async e => {
+    e.preventDefault();
+    const name = $("#accName").value.trim(), pin = $("#accPin").value.trim();
+    if (name.length < 2) return $("#accFb").textContent = CLOUD_MSG.navn;
+    if (!/^\d{4}$/.test(pin)) return $("#accFb").textContent = CLOUD_MSG.pin;
+    $("#accGo").disabled = true; $("#accFb").textContent = "Et øjeblik …";
+    try {
+      if (isNew){
+        if (!S.name) S.name = name;
+        const r = await rpc("oa_register", {p_username:name, p_pin:pin, p_data:S});
+        setAccount({token:r.token, username:name}); save();
+        closeModal(); renderTop(); sfx.win(); confetti(120);
+        openModal(`<h2>Bruger oprettet!</h2><p style="margin:0">Du hedder <b>${esc(name)}</b>. Log ind med dit kaldenavn og din pinkode på andre enheder.</p><div class="row"><button class="btn main" id="closeM">Super</button></div>`);
+        $("#closeM").onclick = closeModal;
+      } else {
+        const r = await rpc("oa_login", {p_username:name, p_pin:pin});
+        const remote = r.data || {}, localStars = totalStars();
+        const finishLogin = d => { setAccount({token:r.token, username:r.username}); applyData(d); cloudDirty = true; cloudPush(); closeModal(); renderTop(); sfx.win(); confetti(100); };
+        if (localStars > 0 && S.name && S.name.toLowerCase() !== String(r.username).toLowerCase()){
+          openModal(`<h2>Hej ${esc(r.username)}!</h2>
+            <p style="margin:0">Der er allerede fremskridt på denne enhed (${esc(S.name)}, ${localStars} ★).</p>
+            <div class="row"><button class="btn" id="useAcc">Brug kun ${esc(r.username)}s</button><button class="btn main" id="mergeAcc">Læg dem sammen</button></div>`, true);
+          $("#useAcc").onclick = () => finishLogin(remote);
+          $("#mergeAcc").onclick = () => finishLogin(mergeData(S, remote));
+        } else finishLogin(mergeData(S, remote));
+      }
+    } catch(err){ $("#accGo").disabled = false; $("#accFb").textContent = cloudErr(err); sfx.bad(); }
+  };
+}
+function confirmLogout(){
+  openModal(`<h2>Log ud?</h2>
+    <p style="margin:0">Dine fremskridt er gemt på din bruger. Når du logger ud, ryddes denne enhed, så en anden kan spille.</p>
+    <div class="row"><button class="btn" id="stayIn">Bliv logget ind</button><button class="btn main" id="goOut">Log ud</button></div>`, true);
+  $("#stayIn").onclick = () => { closeModal(); showProfile(); };
+  $("#goOut").onclick = async () => {
+    $("#goOut").disabled = true; cloudDirty = true; await cloudPush();
+    setAccount(null);
+    applyData({name:"", avatar:"🦊", band:{}, prog:{}, coins:0});
+    closeModal(); showProfile();
+  };
+}
+
 /* ================= GEM-KODE: flyt fremskridt mellem enheder ================= */
 const APP_URL = "https://andersluther.github.io/klogeoeen/";
 const b64u = bytes => { let s = ""; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); };
@@ -3601,6 +3727,7 @@ $("#rankBtn").onclick = () => { sfx.pop(); showRanks(); };
 applyTheme();
 renderHub();
 checkImportLink().then(handled => { if (!handled && !S.name) showProfile(); });
+cloudPull();
 })();
 </script>
 

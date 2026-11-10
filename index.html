@@ -162,6 +162,21 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
 .newpiece{animation:drop .45s ease-out}
+.runway{position:relative;height:min(62vh,460px);min-height:340px;border:3px solid var(--ink);border-radius:20px;overflow:hidden;
+  background:linear-gradient(#1b1440 0 62%, #2b2160 62%), #1b1440}
+.runway::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:38%;background:linear-gradient(#e8d9ff33,#ffffff11);clip-path:polygon(30% 0,70% 0,100% 100%,0 100%)}
+.spot{position:absolute;left:50%;top:-20%;width:70%;height:120%;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 70%,#fff7c955,transparent 60%)}
+.walker{position:absolute;left:50%;bottom:6%;z-index:2;animation:walkin 2.4s ease-out both}
+.walker svg{width:min(200px,42vw);height:auto;background:none!important;border:none!important;box-shadow:none!important}
+@keyframes walkin{0%{transform:translate(-50%,-30%) scale(.55);opacity:0}15%{opacity:1}100%{transform:translate(-50%,0) scale(1)}}
+.rwtitle{position:absolute;top:10px;left:0;right:0;text-align:center;font-family:var(--display);font-size:clamp(22px,5vw,34px);color:#fff;-webkit-text-stroke:1px var(--ink);z-index:3}
+.judges{display:flex;justify-content:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.judge{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:6px 10px;display:flex;flex-direction:column;align-items:center;min-width:100px;opacity:.45;transition:opacity .4s,transform .4s}
+.judge.up{opacity:1;transform:translateY(-4px)}
+.judge .je{font-size:28px;line-height:1} .judge .jn{font-size:11px;color:var(--ink-soft)} .judge .js{color:var(--sun);-webkit-text-stroke:1px var(--ink);font-size:16px;letter-spacing:1px}
+.podium{display:flex;gap:8px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
+.pod{display:flex;flex-direction:column;align-items:center;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:8px 12px;min-width:96px;font-size:15px}
+.pod b{font-size:30px;line-height:1} .pod small{color:var(--ink-soft)} .pod.me{background:var(--sun)}
 body.playing{padding-block:6px}
 body.playing .top{display:none}
 body.playing #play{height:calc(100dvh - 12px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));gap:8px}
@@ -883,7 +898,7 @@ const langQuiz = (pool, langName, lang) => (b, d, n) => shuffle(pool[b]).slice(0
    Hvert fag har en plan med 10 baner; hver bane er en spiltype. */
 const TYPEINFO = {meteor:["☄️","Meteorregn"], clock:["⏰","Klokken"], sort:["🗂️","Sortering"], memory:["🃏","Memory"],
   quiz:["❓","Quiz"], words:["🔤","Ordbygger"], drill:["➕","Regnestykker"], typing:["⌨️","Stav selv"], timeline:["⏳","Rækkefølge"],
-  runner:["🏃","Løb"], build:["🏠","Byg huset"], ttt:["❌","Kryds og bolle"], hang:["⛄","Snemanden"], wsearch:["🔍","Ordjagt"], sudoku:["🧩","Sudoku"], snake:["🐍","Slangen"], cook:["🍕","Køkken"], style:["💄","Styling"]};
+  runner:["🏃","Løb"], fashion:["👗","Modeshow"], build:["🏠","Byg huset"], ttt:["❌","Kryds og bolle"], hang:["⛄","Snemanden"], wsearch:["🔍","Ordjagt"], sudoku:["🧩","Sudoku"], snake:["🐍","Slangen"], cook:["🍕","Køkken"], style:["💄","Styling"]};
 /* ---------- Byggeri ---------- */
 const DIGGER = `<svg viewBox="0 0 120 90" width="1.35em" height="1em" style="vertical-align:middle" aria-label="Gravemaskine"><rect x="8" y="66" width="62" height="16" rx="8" fill="#2a2a33"/><circle cx="18" cy="74" r="5" fill="#666"/><circle cx="60" cy="74" r="5" fill="#666"/><rect x="12" y="44" width="54" height="22" rx="3" fill="#ffc22e" stroke="#1d2742" stroke-width="2"/><rect x="40" y="24" width="24" height="22" rx="3" fill="#ffc22e" stroke="#1d2742" stroke-width="2"/><rect x="45" y="28" width="15" height="12" rx="2" fill="#bfe6f5"/><path d="M64 46 L92 18 L100 24 L74 52Z" fill="#f2a60f" stroke="#1d2742" stroke-width="2"/><path d="M92 18 L112 40 L104 46 L88 28Z" fill="#f2a60f" stroke="#1d2742" stroke-width="2"/><path d="M100 42 L118 50 L112 64 L96 56Z" fill="#7a7f8c" stroke="#1d2742" stroke-width="2"/></svg>`;
 const BYG = {
@@ -1019,6 +1034,9 @@ SUBJECTS.push(
   {id:"sty", arcade:true, subj:"Spillehal", name:"Stylisten", art:"💄", c:"var(--rose)", map:"#ffd3e8",
    desc:"Giv kunderne den frisure, makeup og det tøj, de ønsker sig. Lås nye ting op ved at svare rigtigt.",
    plan:Array(LEVELS).fill("style"), games:{style:{}}},
+  {id:"mode", arcade:true, subj:"Spillehal", name:"Modeshowet", art:"👗", c:"var(--grape)", map:"#d9cfff",
+   desc:"Læs temaet, style din model før tiden løber ud, og gå på catwalken. Dommerne giver point, og du dyster om førstepladsen.",
+   plan:Array(LEVELS).fill("fashion"), games:{fashion:{}}},
 );
 const bandFor = s => bandOf(s.cat || s.id);
 function buildSpec(s, b, d){
@@ -1026,7 +1044,7 @@ function buildSpec(s, b, d){
   return Object.assign({type, k, ico: d === LEVELS ? "👑" : TYPEINFO[type][0]}, typeof g === "function" ? g(b,k,d) : (g || {}));
 }
 const RUNNERS = {meteor:playMath, clock:playClock, words:playWords, memory:playMemory, quiz:playQuiz, sort:playSort, timeline:playTimeline,
-  drill:playDrill, typing:playTyping, build:playBuild, ttt:playTTT, hang:playHang, wsearch:playWordSearch, sudoku:playSudoku, snake:playSnake, runner:playRunner, cook:playCook, style:playStyle};
+  drill:playDrill, typing:playTyping, build:playBuild, ttt:playTTT, hang:playHang, wsearch:playWordSearch, sudoku:playSudoku, snake:playSnake, runner:playRunner, cook:playCook, style:playStyle, fashion:playFashion};
 
 /* ================= hub ================= */
 function renderTop(){
@@ -3525,6 +3543,113 @@ async function checkImportLink(){
   try { const data = await unpackSave(code); confirmImport(data); }
   catch(e){ showLoadCode(code); }
   return true;
+}
+
+/* ================= SPILLEHAL: Modeshowet ================= */
+const SHOWS = [
+  {e:"🏖️", da:"Strandfest", en:"Beach party", dd:"Sol, sand og hav! Vælg lyse sommerfarver og solbriller.", ed:"Sun, sand and sea! Wear bright summer colours and sunglasses.",
+   p:{outfit:["tshirt","kjole"], outfitColor:["gul","hvid","blå"], acc:["solbriller"], hair:["hestehale","langt","knold"]}},
+  {e:"👑", da:"Kongeligt bal", en:"Royal ball", dd:"Du skal til bal på slottet. Vær fin med krone og kjole eller jakkesæt!", ed:"You are going to a ball at the castle. Look royal with a crown!",
+   p:{outfit:["kjole","saet"], outfitColor:["lilla","pink","gul"], acc:["krone"], lips:["rød","pink"], hair:["knold","krøller","langt"]}},
+  {e:"🦸", da:"Superhelte", en:"Superheroes", dd:"Red verden! En superheltedragt i stærke farver.", ed:"Save the world! A superhero suit in strong colours.",
+   p:{outfit:["helt"], outfitColor:["rød","blå","grøn"], hair:["kort","hestehale"]}},
+  {e:"🎸", da:"Rockstjerne", en:"Rock star", dd:"Rock på scenen! Sort tøj, solbriller og vilde farver i håret.", ed:"Rock the stage! Black clothes, sunglasses and wild hair colours.",
+   p:{outfitColor:["sort"], acc:["solbriller","hovedtelefoner"], hairColor:["blå","pink","lilla","rød"], shadow:["lilla","blå"]}},
+  {e:"❄️", da:"Vinterland", en:"Winter wonderland", dd:"Det er koldt! Tag varmt tøj på i hvid eller blå.", ed:"It is cold! Wear something warm in white or blue.",
+   p:{outfit:["hoodie","saet"], outfitColor:["hvid","blå","lilla"], acc:["hovedtelefoner"], shadow:["blå"]}},
+  {e:"🎉", da:"Fødselsdagsfest", en:"Birthday party", dd:"Fest! Pink og lilla, en sløjfe og lidt farve på øjnene.", ed:"Party time! Pink and purple, a bow and some colour on your eyes.",
+   p:{outfit:["kjole","saet"], outfitColor:["pink","lilla"], acc:["sløjfe"], shadow:["pink","lilla"], lips:["pink"]}},
+  {e:"⚽", da:"Sportsdag", en:"Sports day", dd:"Klar til at løbe! Behageligt tøj og håret sat op.", ed:"Ready to run! Comfy clothes and your hair up.",
+   p:{outfit:["tshirt","hoodie"], outfitColor:["grøn","blå","rød"], hair:["hestehale","kort","knold"]}},
+  {e:"🎃", da:"Halloween", en:"Halloween", dd:"Uhyggeligt! Sort og lilla, og mørke farver på læber og øjne.", ed:"Spooky! Black and purple, with dark colours on your lips and eyes.",
+   p:{outfitColor:["sort","lilla"], lips:["lilla"], shadow:["lilla","grøn"], hairColor:["sort","lilla"]}},
+];
+const RIVALS = ["Ella","Noah","Freja","Oscar","Ida","Malthe","Alma","Liam","Clara","Emil"];
+const JUDGES = [["🦩","Flora Flamingo"],["🐼","Pelle Panda"],["🦊","Rikke Ræv"]];
+function playFashion(stage, b, d){
+  const show = SHOWS[(d - 1) % SHOWS.length], en = b === 3;
+  const secs = Math.max(45, 100 - d*5);
+  let L = Object.assign({}, STY_DEFAULT), tab = "outfit", left = secs, timer = 0, done = false, bonus = 0, timers = [];
+  const swatch = c => `<span class="dotc" style="background:${SCOL[c]}"></span>`;
+  const hint = b === 1 ? `<div class="row" style="justify-content:flex-start;gap:6px;margin-top:6px">${(show.p.outfitColor || []).map(swatch).join("")}
+      ${(show.p.acc || []).filter(a => a !== "ingen").map(a => `<span class="tag">${optName("acc", a)}</span>`).join("")}
+      ${(show.p.outfit || []).map(o => `<span class="tag">${optName("outfit", o)}</span>`).join("")}</div>` : "";
+  stage.innerHTML = `<div class="styl">
+    <div class="model">
+      <div class="bubble" style="width:100%"><b style="font-family:var(--display);font-weight:400;font-size:22px">${show.e} ${en ? "Theme" : "Tema"}: ${en ? show.en : show.da}</b><br>${esc(en ? show.ed : show.dd)}${hint}</div>
+      <div class="timer" style="width:100%" aria-hidden="true"><i id="ftbar"></i></div>
+      <div id="fmodel"></div></div>
+    <div><div class="tabs" id="ftabs">${Object.keys(STY).map(k => `<button data-t="${k}">${STY[k].label}</button>`).join("")}</div>
+      <div class="choices" id="fch"></div>
+      <div class="row" style="justify-content:flex-start;margin-top:14px"><button class="btn main" id="fgo">Gå på catwalken ✨</button></div>
+      <p class="fb" id="ffb" style="text-align:left"></p></div></div>`;
+  setStatus(`${show.e} ${en ? show.en : show.da}`);
+  const draw = () => {
+    $("#fmodel").innerHTML = styleSVG(L);
+    document.querySelectorAll("#ftabs button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.t === tab)));
+    const st = STY[tab];
+    $("#fch").innerHTML = st.colors
+      ? st.colors.map(v => `<button class="choice sw ${styOpen(tab, v) ? "" : "locked"}" data-v="${v}" style="background:${v === "ingen" ? "repeating-linear-gradient(45deg,#fff 0 6px,#eee 6px 12px)" : SCOL[v]}" aria-label="${v}" aria-pressed="${L[tab] === v}"></button>`).join("")
+      : st.opts.map(([v, name]) => `<button class="choice ${styOpen(tab, v) ? "" : "locked"}" data-v="${v}" aria-pressed="${L[tab] === v}">${name}</button>`).join("");
+  };
+  $("#ftabs").onclick = e => { const x = e.target.closest("button"); if (!x) return; tab = x.dataset.t; sfx.pop(); draw(); };
+  $("#fch").onclick = e => {
+    const x = e.target.closest(".choice"); if (!x || done) return;
+    const v = x.dataset.v, cat = tab;
+    if (!styOpen(cat, v)){
+      const nm = STY[cat].colors ? `${STY[cat].label.toLowerCase()}: ${v}` : optName(cat, v).toLowerCase();
+      askQuestion(b, `Lås ${nm} op`, "Svar rigtigt for at låse den op for altid. Den kan også bruges i Stylisten.", () => { S.unlocks.push(`sty:${cat}:${v}`); save(); L[cat] = v; draw(); });
+      return;
+    }
+    L[cat] = v; sfx.pop(); draw();
+  };
+  timer = setInterval(() => {
+    if (done || !$("#veil").hidden) return;
+    left--; const bar = $("#ftbar");
+    if (bar){ bar.style.transform = `scaleX(${left/secs})`; bar.style.background = left < secs*.3 ? "var(--bad)" : left < secs*.6 ? "var(--sun)" : "var(--leaf)"; }
+    if (left <= 0) runway();
+  }, 1000);
+  $("#fgo").onclick = runway;
+  function themeScore(){
+    const cats = Object.keys(show.p); let hit = 0;
+    for (const c of cats) if (show.p[c].includes(L[c])) hit++;
+    return hit / cats.length;
+  }
+  function runway(){
+    if (done) return; done = true; clearInterval(timer);
+    const ratio = themeScore();
+    stage.innerHTML = `<div class="runway" id="rw">
+      <div class="spot"></div><div class="walker" id="walker">${styleSVG(L)}</div>
+      <div class="rwtitle">${show.e} ${en ? show.en : show.da}</div></div>
+      <div class="judges" id="judges">${JUDGES.map(([e,n]) => `<div class="judge"><span class="je">${e}</span><span class="jn">${n}</span><span class="js">…</span></div>`).join("")}</div>
+      <p class="fb" id="rwfb">Modellen går på catwalken …</p>`;
+    sfx.win();
+    timers.push(setTimeout(() => {
+      askQuestion(b, "Dommerne har et spørgsmål!", "Svar rigtigt, så får du et ekstra point af hver dommer.", () => { bonus = 1; });
+      const wait = setInterval(() => { if ($("#veil").hidden){ clearInterval(wait); judge(ratio); } }, 300);
+      timers.push(wait);
+    }, 2600));
+  }
+  function judge(ratio){
+    const base = 1 + ratio * 3.6;
+    const scores = JUDGES.map(() => Math.max(1, Math.min(5, Math.round(base + (Math.random() - .5) * 1.2) + bonus)));
+    const mine = scores.reduce((a, c) => a + c, 0);
+    const lvl = 7 + d * .5;
+    const rivals = shuffle(RIVALS).slice(0, 2).map(n => ({n, s: Math.max(3, Math.min(15, Math.round(lvl + (Math.random() - .5) * 5)))}));
+    document.querySelectorAll("#judges .js").forEach((el, i) => timers.push(setTimeout(() => { el.textContent = "★".repeat(scores[i]) + "☆".repeat(5 - scores[i]); el.parentElement.classList.add("up"); sfx.pop(); }, 500 + i*700)));
+    timers.push(setTimeout(() => {
+      const all = [{n:(S.name || "Dig") + " (dig)", s:mine, me:true}, ...rivals].sort((a, c) => c.s - a.s || (c.me ? 1 : -1));
+      const place = all.findIndex(x => x.me) + 1;
+      setScore(mine * 10 + (bonus ? 20 : 0));
+      $("#rwfb").innerHTML = `<div class="podium">${all.map((x, i) => `<div class="pod p${i+1} ${x.me ? "me" : ""}"><b>${["🥇","🥈","🥉"][i]}</b>${esc(x.n)}<small>${x.s} point</small></div>`).join("")}</div>`;
+      if (place === 1){ confetti(200); sfx.win(); }
+      const stars = place === 1 ? 3 : place === 2 ? 2 : mine >= 6 ? 1 : 0;
+      const tip = ratio < .6 ? ` Tip: ${en ? "Læs temaet igen" : "Læs temaet igen"} og vælg det, der passer.` : "";
+      timers.push(setTimeout(() => finish(stars, `Du fik ${mine} af 15 point og blev nr. ${place}.${tip}`), 2600));
+    }, 500 + JUDGES.length*700 + 400));
+  }
+  draw();
+  return () => { clearInterval(timer); timers.forEach(t => { clearTimeout(t); clearInterval(t); }); };
 }
 
 /* ================= TEMAER ================= */

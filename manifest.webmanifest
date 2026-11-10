@@ -5,7 +5,11 @@
   "lang": "da",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
   "orientation": "any",
   "background_color": "#8fd3e6",
   "theme_color": "#8fd3e6",

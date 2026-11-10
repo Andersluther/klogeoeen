@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Onkel A's Ø">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0;font:14px system-ui,sans-serif}
@@ -162,6 +162,14 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
 .newpiece{animation:drop .45s ease-out}
+body.playing{padding-block:6px}
+body.playing .top{display:none}
+body.playing #play{height:calc(100dvh - 12px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));gap:8px}
+body.playing #play .playbar h2{font-size:clamp(16px,3.5vw,26px)}
+body.playing .stage{flex:1;min-height:0;overflow:auto;padding:10px;display:flex;flex-direction:column}
+body.playing .stage > *{width:100%;margin-block:auto}
+body.playing .stage > .runner, body.playing .stage > .space{height:100%;max-height:none;min-height:300px;margin:0}
+body.playing #play .playbar .chip{padding:4px 10px;font-size:14px}
 .drawapp{display:flex;flex-direction:column;gap:10px}
 .drawapp .sw{width:38px;height:38px;border-radius:50%;border:3px solid var(--ink);padding:0}
 .drawapp .sw[aria-pressed="true"]{outline:4px solid var(--grape);outline-offset:2px}
@@ -1072,15 +1080,53 @@ function renderCat(){
 }
 $("#catBands").addEventListener("click", e => { const x = e.target.closest("button"); if (!x) return; S.band[curCat.id] = +x.dataset.b; save(); sfx.pop(); renderCat(); });
 $("#catGames").addEventListener("click", e => { const b = e.target.closest(".isle"); if (b) { sfx.pop(); openMap(b.dataset.g); } });
-$("#catBack").onclick = showHub;
+$("#catBack").onclick = navBack;
 $("#soundBtn").onclick = () => { S.sound = !S.sound; save(); renderTop(); sfx.pop(); };
 $("#albumBtn").onclick = showAlbum;
 $("#profileBtn").onclick = showProfile;
 
 function show(view){
   ["hub","catView","mapView","play"].forEach(v => $("#"+v).hidden = v !== view);
+  document.body.classList.toggle("playing", view === "play");
   window.scrollTo(0,0);
+  pushNav(view);
 }
+/* Tilbage-navigation: telefonens tilbage-knap/-swipe går ét skridt tilbage i appen */
+let navLock = false, navDepth = 0;
+function pushNav(view){
+  if (navLock) return;
+  try {
+    if (view === "hub"){ return; }
+    if (history.state && history.state.v === view) history.replaceState({v:view}, "");
+    else { history.pushState({v:view}, ""); navDepth++; }
+  } catch(e) {}
+}
+function curView(){
+  if (!$("#world").hidden) return "world";
+  return ["play","mapView","catView"].find(v => !$("#"+v).hidden) || "hub";
+}
+function goBack(){
+  navLock = true;
+  try {
+    if (!$("#veil").hidden){
+      const m = $("#modal");
+      if (m.querySelector("#toMap")) { closeModal(); }
+      else if ($("#ulater") || $("#closeM") || $("#shopClose")) { closeModal(); return; }
+      else if (dismissable()) { closeModal(); return; }
+      else if (m.dataset.lock) return;
+    }
+    const v = curView();
+    if (v === "world") leaveWorld();
+    else if (v === "play"){ stopGame(); if (appMode){ appMode = false; $("#score").parentElement.hidden = false; showHub(); } else { renderMap(); show("mapView"); } }
+    else if (v === "mapView"){ if (subj && subj.cat) openCat(subj.cat); else showHub(); }
+    else if (v === "catView") showHub();
+  } finally { navLock = false; }
+}
+function navBack(){ if (navDepth > 0){ try { history.back(); return; } catch(e) {} } goBack(); }
+addEventListener("popstate", () => { navDepth = Math.max(0, navDepth - 1); goBack(); });
+/* fuld skærm på Android/computer når appen er installeret */
+const isApp = () => matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches || navigator.standalone === true;
+function goFullscreen(){ try { if (isApp() && document.fullscreenEnabled && !document.fullscreenElement) document.documentElement.requestFullscreen({navigationUI:"hide"}).catch(() => {}); } catch(e) {} }
 function showHub(){ stopGame(); renderHub(); show("hub"); }
 
 /* ================= banekort ================= */
@@ -1116,7 +1162,7 @@ $("#map").addEventListener("click", e => {
   if (n.classList.contains("locked")){ sfx.bad(); n.classList.remove("shake"); void n.offsetWidth; n.classList.add("shake"); return; }
   startLevel(+n.dataset.d);
 });
-$("#mapBack").onclick = () => subj && subj.cat ? openCat(subj.cat) : showHub();
+$("#mapBack").onclick = navBack;
 
 /* ================= spil-skal ================= */
 let cleanup = null, cur = null, score = 0;
@@ -1127,16 +1173,16 @@ function setCombo(n){ $("#combo").hidden = n < 2; $("#comboN").textContent = n; 
 const heartsHTML = (n,max=3) => `<span class="hearts" aria-label="${n} liv">${"❤️".repeat(Math.max(0,n))}${"🤍".repeat(Math.max(0,max-n))}</span>`;
 
 function startLevel(d){
-  stopGame(); closeModal(); appMode = false; $("#score").parentElement.hidden = false;
+  stopGame(); closeModal(); appMode = false; $("#score").parentElement.hidden = false; goFullscreen();
   const b = bandFor(subj), sp = buildSpec(subj,b,d);
   cur = {s:subj.id, b, d, sp};
-  $("#gameTitle").textContent = `${subj.subj} · Bane ${d} · ${TYPEINFO[sp.type][1]}`;
+  $("#gameTitle").textContent = `${subj.subj} · Bane ${d} · ${TYPEINFO[sp.type][1]}`; $("#backBtn").textContent = "← Banekort";
   setScore(0); setCombo(0); setStatus("");
   const stage = $("#stage"); stage.innerHTML = "";
   show("play");
   cleanup = RUNNERS[sp.type](stage, b, d, sp) || null;
 }
-$("#backBtn").onclick = () => { stopGame(); if (appMode){ appMode = false; $("#score").parentElement.hidden = false; return showHub(); } renderMap(); show("mapView"); };
+$("#backBtn").onclick = navBack;
 
 function finish(stars, line){
   stopGame();
@@ -1173,7 +1219,7 @@ function finish(stars, line){
     </div>`);
   if (hasNext) $("#nextL").onclick = () => learnBreak(cur.b, () => startLevel(cur.d+1));
   $("#again").onclick = () => learnBreak(cur.b, () => startLevel(cur.d));
-  $("#toMap").onclick = () => learnBreak(cur.b, () => { closeModal(); renderMap(); show("mapView"); });
+  $("#toMap").onclick = () => learnBreak(cur.b, () => { closeModal(); navBack(); });
   ($("#nextL") || $("#again")).focus();
 }
 function nextStickerHTML(){
@@ -1718,9 +1764,10 @@ function loadThree(){
   });
 }
 async function enterWorld(openShop){
-  stopGame(); closeModal();
+  stopGame(); closeModal(); goFullscreen();
   ["hub","catView","mapView","play"].forEach(v => $("#"+v).hidden = true);
   $("#world").hidden = false;
+  pushNav("world");
   try { await loadThree(); }
   catch(e){
     $("#world").hidden = true; showHub();
@@ -1767,7 +1814,7 @@ function leaveWorld(then){
 }
 $("#worldBtn").onclick = () => { sfx.pop(); enterWorld(false); };
 $("#avatarBtn").onclick = () => { sfx.pop(); enterWorld(true); };
-$("#worldBack").onclick = () => leaveWorld();
+$("#worldBack").onclick = navBack;
 $("#shopBtn").onclick = () => { sfx.pop(); toggleShop($("#shop").hidden); };
 
 let toastT = 0;
@@ -3316,8 +3363,8 @@ function renderApps(){
 $("#apps").addEventListener("click", e => { const x = e.target.closest(".isle"); if (x){ sfx.pop(); openApp(x.dataset.app); } });
 function openApp(id){
   stopGame(); closeModal();
-  const a = APPS.find(x => x.id === id); appMode = true;
-  $("#gameTitle").textContent = a.name; setScore(0); setCombo(0); setStatus("");
+  const a = APPS.find(x => x.id === id); appMode = true; goFullscreen();
+  $("#gameTitle").textContent = a.name; setScore(0); setCombo(0); setStatus(""); $("#backBtn").textContent = "← Tilbage";
   $("#score").parentElement.hidden = true;
   const stage = $("#stage"); stage.innerHTML = ""; show("play");
   cleanup = ({draw:appDraw, piano:appPiano, calc:appCalc, table:appTable, dict:appDict})[id](stage) || null;

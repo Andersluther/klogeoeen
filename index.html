@@ -1253,11 +1253,18 @@ function showProfile(){
       <div><div style="margin-bottom:8px">Vælg din figur</div>
       <div class="avs" id="avs">${AVATARS.map(a=>`<button type="button" data-a="${a}" aria-pressed="${a===av}">${a}</button>`).join("")}</div></div>
       <div class="row"><button class="btn main" type="submit">${S.name ? "Gem" : "Start eventyret"}</button></div>
-    </form>`);
+    </form>
+    <div class="newstick" style="text-align:left;display:flex;flex-direction:column;gap:8px">
+      <b style="font-size:17px;display:block">📲 Flyt dine fremskridt</b>
+      <span style="font-size:14px">${S.name ? "Lav en gem-kode og scan den med den nye telefon eller tablet." : "Har du spillet før på en anden enhed? Hent dine fremskridt med din gem-kode."}</span>
+      <div class="row" style="justify-content:flex-start">${S.name ? `<button class="btn" type="button" id="mkSave">Lav gem-kode</button>` : ""}<button class="btn" type="button" id="ldSave">Indlæs gem-kode</button></div>
+    </div>`);
+  if ($("#mkSave")) $("#mkSave").onclick = showSaveCode;
+  $("#ldSave").onclick = () => showLoadCode();
   $("#avs").onclick = e => { const x = e.target.closest("button"); if (!x) return; av = x.dataset.a; sfx.pop();
     $("#avs").querySelectorAll("button").forEach(y => y.setAttribute("aria-pressed", String(y===x))); };
   $("#pf").onsubmit = e => { e.preventDefault(); S.name = $("#nameIn").value.trim() || "Spiller"; S.avatar = av; save(); closeModal(); renderTop(); sfx.ok(); };
-  setTimeout(()=>$("#nameIn").focus(), 50);
+  setTimeout(() => { const n = $("#nameIn"); if (n) n.focus(); }, 50);
 }
 
 /* ================= MATEMATIK: Meteorregn ================= */
@@ -3312,6 +3319,88 @@ function showRanks(){
   $("#closeM").onclick = closeModal;
 }
 
+/* ================= GEM-KODE: flyt fremskridt mellem enheder ================= */
+const APP_URL = "https://andersluther.github.io/klogeoeen/";
+const b64u = bytes => { let s = ""; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); };
+const unb64u = str => { const s = atob(str.replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+async function packSave(){
+  const json = new TextEncoder().encode(JSON.stringify(S));
+  if (window.CompressionStream){
+    const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer();
+    return "z" + b64u(new Uint8Array(buf));
+  }
+  return "j" + b64u(json);
+}
+async function unpackSave(code){
+  code = code.trim().replace(/^.*#gem-/, "").replace(/\s+/g, "");
+  const kind = code[0], bytes = unb64u(code.slice(1));
+  let txt;
+  if (kind === "z"){
+    if (!window.DecompressionStream) throw new Error("old");
+    txt = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+  } else txt = new TextDecoder().decode(bytes);
+  const data = JSON.parse(txt);
+  if (!data || typeof data !== "object" || !data.prog) throw new Error("bad");
+  return data;
+}
+function loadQR(){
+  if (window.QRCode) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+}
+async function showSaveCode(){
+  const code = await packSave(), link = `${APP_URL}#gem-${code}`;
+  openModal(`<h2>Din gem-kode</h2>
+    <p style="margin:0">Scan QR-koden med kameraet på den nye enhed. Så åbner Onkel A's Ø med alle dine stjerner, figurer og mønter.</p>
+    <div id="qrbox" style="display:grid;place-items:center;min-height:120px;background:#fff;border:3px solid var(--ink);border-radius:16px;padding:12px"><span style="color:var(--ink-soft)">Laver QR-kode …</span></div>
+    <p style="margin:0;font-size:14px;color:var(--ink-soft)">Ingen kamera? Kopiér koden og indsæt den under “Indlæs gem-kode” på den anden enhed.</p>
+    <textarea id="codeOut" readonly rows="3" style="width:100%;font:12px/1.3 monospace;border:2px solid var(--ink);border-radius:10px;padding:8px;word-break:break-all">${esc(code)}</textarea>
+    <div class="row"><button class="btn" id="cpCode">📋 Kopiér kode</button><button class="btn main" id="closeM">Færdig</button></div>
+    <p style="margin:0;font-size:13px;color:var(--ink-soft)">Koden er en kopi af dine fremskridt lige nu. Lav en ny, hvis du spiller videre, før du flytter.</p>`);
+  $("#closeM").onclick = closeModal;
+  $("#cpCode").onclick = async () => { try { await navigator.clipboard.writeText(code); $("#cpCode").textContent = "✅ Kopieret"; } catch(e) { const t = $("#codeOut"); t.focus(); t.select(); $("#cpCode").textContent = "Markeret – kopiér selv"; } };
+  try {
+    await loadQR();
+    const box = $("#qrbox"); if (!box) return; box.innerHTML = "";
+    if (link.length > 2900){ box.innerHTML = `<span style="color:var(--ink-soft);text-align:center">Dine fremskridt er for store til en QR-kode. Brug “Kopiér kode” i stedet.</span>`; return; }
+    new QRCode(box, {text:link, width:260, height:260, correctLevel:QRCode.CorrectLevel.L});
+  } catch(e){ const box = $("#qrbox"); if (box) box.innerHTML = `<span style="color:var(--ink-soft)">QR-koden kunne ikke laves uden internet. Brug “Kopiér kode”.</span>`; }
+}
+function showLoadCode(prefill){
+  openModal(`<h2>Indlæs gem-kode</h2>
+    <p style="margin:0">Indsæt koden fra din anden enhed.</p>
+    <textarea id="codeIn" rows="4" style="width:100%;font:12px/1.3 monospace;border:2px solid var(--ink);border-radius:10px;padding:8px" placeholder="Indsæt gem-kode her">${typeof prefill === "string" ? esc(prefill) : ""}</textarea>
+    <p class="fb" id="ldfb"></p>
+    <div class="row"><button class="btn" id="noLoad">Annullér</button><button class="btn main" id="doLoad">Hent fremskridt</button></div>`, true);
+  $("#noLoad").onclick = () => { closeModal(); if (!S.name) showProfile(); };
+  $("#doLoad").onclick = async () => {
+    try { const data = await unpackSave($("#codeIn").value); confirmImport(data); }
+    catch(e){ $("#ldfb").textContent = "Koden virker ikke. Tjek at hele koden er kopieret med."; sfx.bad(); }
+  };
+}
+function confirmImport(data){
+  const stars = Object.values(data.prog || {}).reduce((a,b) => a+b, 0), mine = totalStars();
+  openModal(`<h2>Hent fremskridt?</h2>
+    <p style="margin:0;font-size:18px"><b>${esc(data.name || "Spiller")}</b> ${esc(data.avatar || "")} · ${stars} ★ · ${data.coins || 0} 🪙</p>
+    ${S.name && mine > 0 ? `<p style="margin:0;color:var(--bad)">Det erstatter fremskridtene på denne enhed (${esc(S.name)}, ${mine} ★).</p>` : ""}
+    <div class="row"><button class="btn" id="noImp">Nej</button><button class="btn main" id="yesImp">Ja, hent</button></div>`, true);
+  $("#noImp").onclick = () => { closeModal(); if (!S.name) showProfile(); };
+  $("#yesImp").onclick = () => {
+    const keepSound = S.sound;
+    S = Object.assign({name:"", avatar:"🦊", sound:true, band:{}, prog:{}, coins:0, owned:["none","cap"], unlocks:[], obby:1, theme:"oe"}, data, {sound:keepSound});
+    S.look = Object.assign({skin:SKINS[0], shirt:CLOTH[0], pants:CLOTH[7], hat:"cap"}, data.look || {});
+    save(); closeModal(); applyTheme(); showHub(); sfx.win(); confetti(160);
+    if (W){ buildAvatar(); buildCourse(S.obby); }
+  };
+}
+async function checkImportLink(){
+  if (!location.hash.startsWith("#gem-")) return false;
+  const code = location.hash.slice(5);
+  try { history.replaceState(history.state, "", location.pathname + location.search); } catch(e) {}
+  try { const data = await unpackSave(code); confirmImport(data); }
+  catch(e){ showLoadCode(code); }
+  return true;
+}
+
 /* ================= TEMAER ================= */
 const THEMES = {
   oe:{name:"Øen", e:"🏝️", free:true, bg:"#8fd3e6", pat:"", sky:"#9fdcf0", ground:"#5cb85f", road:"#5a6275", blocks:["#ff6a55","#ffc22e","#3d9bff","#7a5cff","#ff7eb6","#17b3a3"]},
@@ -3511,7 +3600,7 @@ $("#themeBtn").onclick = () => { sfx.pop(); showThemes(); };
 $("#rankBtn").onclick = () => { sfx.pop(); showRanks(); };
 applyTheme();
 renderHub();
-if (!S.name) showProfile();
+checkImportLink().then(handled => { if (!handled && !S.name) showProfile(); });
 })();
 </script>
 

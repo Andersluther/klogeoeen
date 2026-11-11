@@ -162,6 +162,11 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
 .newpiece{animation:drop .45s ease-out}
+.sayb{display:inline-grid;place-items:center;vertical-align:middle;margin-left:10px;width:40px;height:40px;border-radius:50%;border:3px solid var(--ink);background:var(--sun);
+  font-size:18px;line-height:1;padding:0;box-shadow:2px 2px 0 var(--ink);font-family:system-ui,sans-serif;-webkit-text-stroke:0;cursor:pointer}
+.sayb:active{transform:translate(2px,2px);box-shadow:none}
+.problem .sayb{width:34px;height:34px;font-size:16px}
+#readBtn[aria-pressed="true"]{background:var(--sun)}
 .runway{position:relative;height:min(62vh,460px);min-height:340px;border:3px solid var(--ink);border-radius:20px;overflow:hidden;
   background:linear-gradient(#1b1440 0 62%, #2b2160 62%), #1b1440}
 .runway::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:38%;background:linear-gradient(#e8d9ff33,#ffffff11);clip-path:polygon(30% 0,70% 0,100% 100%,0 100%)}
@@ -427,6 +432,7 @@ body.playing #play .playbar .chip{padding:4px 10px;font-size:14px}
       <span class="chip" aria-label="Mønter">🪙 <span id="coinCount">0</span></span>
       <button class="chip" id="rankBtn" aria-label="Se rangering">🏅 <span id="rankName">Begynder</span></button>
       <button class="chip" id="themeBtn" aria-label="Vælg tema">🌈 Tema</button>
+      <button class="chip" id="readBtn" aria-label="Automatisk oplæsning til og fra">🗣️ Oplæsning</button>
       <button class="chip" id="soundBtn" aria-label="Lyd til og fra">🔊 Lyd</button>
     </div>
   </header>
@@ -1056,6 +1062,8 @@ function renderTop(){
   const bk = Object.keys(S.prog).filter(k => k.startsWith("blok-"));
   $("#wmeta").innerHTML = `<span><span class="star">★</span> ${bk.reduce((a,k)=>a+S.prog[k],0)} i Blokverdenen</span><span>Bane ${bk.length}/${Math.max(S.obby||1, bk.length)} klaret</span>`;
   $("#soundBtn").textContent = S.sound ? "🔊 Lyd" : "🔇 Lyd";
+  $("#readBtn").textContent = S.autoRead ? "🗣️ Oplæsning: til" : "🗣️ Oplæsning: fra";
+  $("#readBtn").setAttribute("aria-pressed", String(!!S.autoRead));
 }
 function bandOf(id){ return S.band[id] || 1; }
 function trackCard(g){
@@ -1407,7 +1415,7 @@ function runQuiz(stage, secs, questions){
       <div class="timer" aria-hidden="true"><i id="tbar"></i></div>
       ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
       <div class="q-text">${esc(q.q)}</div>
-      <div class="opts">${opts.map(o=>`<button class="opt">${esc(o)}</button>`).join("")}</div>
+      <div class="opts" ${q.lang ? `data-lang="${q.lang}"` : ""}>${opts.map(o=>`<button class="opt">${esc(o)}</button>`).join("")}</div>
     </div>`;
     stage.querySelectorAll(".opt").forEach(x => x.onclick = () => answer(x));
     deadline = performance.now() + secs*1000;
@@ -2232,7 +2240,7 @@ function askGate(){
     <p style="margin:0;color:var(--ink-soft)">Svar rigtigt for at gemme dit checkpoint og få 3 🪙.</p>
     ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
     <div class="q-text" style="font-size:clamp(20px,4vw,28px)">${esc(q.q)}</div>
-    <div class="opts" id="gopts">${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>`, true);
+    <div class="opts" id="gopts" ${q.lang ? `data-lang="${q.lang}"` : ""}>${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>`, true);
   const btns = [...$("#gopts").querySelectorAll(".opt")];
   btns.forEach(x => x.onclick = () => {
     btns.forEach(y => { y.disabled = true; if (y.textContent === q.a) y.classList.add("ok"); });
@@ -2346,7 +2354,7 @@ function askQuestion(b, title, sub, onOk){
   openModal(`<h2>${title}</h2><p style="margin:0;color:var(--ink-soft)">${sub}</p>
     ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
     <div class="q-text" style="font-size:clamp(20px,4vw,28px)">${esc(q.q)}</div>
-    <div class="opts" id="uopts">${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>
+    <div class="opts" id="uopts" ${q.lang ? `data-lang="${q.lang}"` : ""}>${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>
     <div class="row"><button class="btn" id="ulater">Senere</button></div>`, true);
   $("#ulater").onclick = closeModal;
   const btns = [...$("#uopts").querySelectorAll(".opt")];
@@ -2366,7 +2374,7 @@ function learnBreak(b, then){
     <p style="margin:0;color:var(--ink-soft)">Svar på opgaven, så går du videre. Rigtigt svar giver +1 🪙.</p>
     ${q.visual ? `<div class="q-visual">${q.visual}</div>` : ""}
     <div class="q-text" style="font-size:clamp(20px,4vw,28px)">${esc(q.q)}</div>
-    <div class="opts" id="bopts">${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>
+    <div class="opts" id="bopts" ${q.lang ? `data-lang="${q.lang}"` : ""}>${opts.map(o => `<button class="opt">${esc(o)}</button>`).join("")}</div>
     <p class="fb" id="bfb"></p>
     <div class="row" id="brow" hidden><button class="btn main" id="bnext">Videre ▶</button></div>`, true);
   const go = () => { if (done) return; done = true; closeModal(); then(); };
@@ -3652,6 +3660,59 @@ function playFashion(stage, b, d){
   return () => { clearInterval(timer); timers.forEach(t => { clearTimeout(t); clearInterval(t); }); };
 }
 
+/* ================= OPLÆSNING af spørgsmål og svar ================= */
+function voiceFor(lang){
+  try { const vs = speechSynthesis.getVoices(), base = lang.slice(0, 2);
+    return vs.find(v => v.lang === lang) || vs.find(v => v.lang && v.lang.toLowerCase().startsWith(base)) || null; } catch(e){ return null; }
+}
+const MATHWORDS = [[/\s*=\s*\?/g, " er lig med hvad"], [/(^|[\s(])\?(?=\s*[+−×:=\d])/g, "$1hvad"], [/\s*=\s*$/g, " er lig med hvad"], [/\s*\+\s*/g, " plus "], [/\s*[−-]\s*(?=\d)/g, " minus "], [/\s*×\s*/g, " gange "],
+  [/(\d)\s*:\s*(\d)/g, "$1 divideret med $2"], [/\s*=\s*/g, " er lig med "], [/½/g, "en halv"], [/¼/g, "en fjerdedel"], [/m²/g, " kvadratmeter"], [/(\d) kr\b/g, "$1 kroner"]];
+function speakText(text){ let t = String(text); for (const [re, w] of MATHWORDS) t = t.replace(re, w); return t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu, " ").replace(/\s+/g, " ").trim(); }
+function sayQueue(parts){
+  try {
+    speechSynthesis.cancel();
+    for (const [text, lang] of parts){
+      const t = speakText(text); if (!t) continue;
+      const u = new SpeechSynthesisUtterance(t); u.lang = lang || "da-DK"; u.rate = .9;
+      const v = voiceFor(u.lang); if (v) u.voice = v;
+      speechSynthesis.speak(u);
+    }
+  } catch(e) {}
+}
+function readQuestion(qEl){
+  const box = qEl.closest(".quiz, .modal, .runner, .space, #stage") || document;
+  const clone = qEl.cloneNode(true); clone.querySelectorAll(".sayb, .ropts").forEach(x => x.remove());
+  const parts = [[clone.textContent, "da-DK"]];
+  const optBox = qEl.id === "rq" ? qEl.querySelector(".ropts") : box.querySelector(".opts:not(#pad)");
+  if (optBox){
+    const lang = optBox.dataset.lang || "da-DK";
+    const opts = [...optBox.querySelectorAll(qEl.id === "rq" ? "span" : ".opt")].map(o => o.textContent.trim()).filter(Boolean);
+    if (opts.length){
+      parts.push([qEl.id === "rq" ? "Venstre, midten, højre:" : "Svarmulighederne er:", "da-DK"]);
+      opts.forEach((o, i) => parts.push([o + (i < opts.length - 1 ? "," : "."), lang]));
+    }
+  }
+  sayQueue(parts);
+}
+let lastAuto = "";
+function addSayButtons(root){
+  (root.querySelectorAll ? root : document).querySelectorAll(".q-text, #rq, .problem").forEach(el => {
+    if (el.querySelector(":scope > .sayb") || !el.textContent.trim()) return;
+    const b = document.createElement("button");
+    b.className = "sayb"; b.type = "button"; b.textContent = "🔊"; b.setAttribute("aria-label", "Læs op");
+    b.addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); readQuestion(el); });
+    b.addEventListener("pointerdown", e => e.stopPropagation());
+    el.appendChild(b);
+    if (S.autoRead && el.offsetParent !== null){
+      const key = el.textContent;
+      if (key !== lastAuto){ lastAuto = key; setTimeout(() => { if (document.contains(el)) readQuestion(el); }, 350); }
+    }
+  });
+}
+new MutationObserver(muts => { for (const m of muts) if (m.addedNodes.length){ addSayButtons(document); break; } })
+  .observe(document.body, {childList:true, subtree:true});
+try { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; } catch(e) {}
+
 /* ================= TEMAER ================= */
 const THEMES = {
   oe:{name:"Øen", e:"🏝️", free:true, bg:"#8fd3e6", pat:"", sky:"#9fdcf0", ground:"#5cb85f", road:"#5a6275", blocks:["#ff6a55","#ffc22e","#3d9bff","#7a5cff","#ff7eb6","#17b3a3"]},
@@ -3849,6 +3910,7 @@ function appDict(stage){
 renderApps();
 $("#themeBtn").onclick = () => { sfx.pop(); showThemes(); };
 $("#rankBtn").onclick = () => { sfx.pop(); showRanks(); };
+$("#readBtn").onclick = () => { S.autoRead = !S.autoRead; save(); renderTop(); sayQueue([[S.autoRead ? "Oplæsning er slået til. Jeg læser spørgsmålene op for dig." : "Oplæsning er slået fra.", "da-DK"]]); };
 applyTheme();
 renderHub();
 checkImportLink().then(handled => { if (!handled && !S.name) showProfile(); });

@@ -162,6 +162,27 @@ button.chip:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .shake{animation:shake .4s}
 .newpiece{animation:drop .45s ease-out}
+.fashion3d{position:relative;height:min(72vh,620px);min-height:420px;border:3px solid var(--ink);border-radius:18px;overflow:hidden;background:#ffe6f2;touch-action:none;user-select:none;-webkit-user-select:none}
+.fashion3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+body.playing .stage > .fashion3d{height:100%;max-height:none;min-height:340px;margin:0}
+.fhud{position:absolute;top:8px;left:8px;right:8px;z-index:3;display:flex;gap:8px;align-items:flex-start}
+.ftheme{flex:1;min-width:0;background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:6px 10px;box-shadow:3px 3px 0 var(--ink);display:flex;flex-direction:column;gap:6px}
+.fhud .btn{white-space:nowrap}
+.fhint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:3;background:#1d2742cc;color:var(--paper);border-radius:999px;padding:6px 14px;font-size:13px;white-space:nowrap}
+.fpanel{position:absolute;right:8px;top:96px;bottom:8px;width:min(340px,calc(100% - 16px));z-index:4;overflow:auto;background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:12px;display:flex;flex-direction:column;gap:6px}
+@media (max-width:600px){ .fpanel{top:auto;height:50%} }
+.fpanel h3{font-size:22px;margin-right:36px}
+.fpanel .lbl{margin-top:4px}
+.fclose{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);background:#fff;padding:0;font-size:16px}
+.fstage{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.fstage > *{pointer-events:auto}
+.fname{font-family:var(--display);font-size:clamp(22px,5vw,32px);color:#fff;-webkit-text-stroke:1px var(--ink);text-shadow:2px 2px 0 var(--ink)}
+.fposes{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;background:#1d2742cc;border-radius:16px;padding:8px;color:var(--paper)}
+.fposes .btn{padding:6px 10px;font-size:14px;color:var(--ink)}
+.fvote{background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:12px 16px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;max-width:100%}
+.fstars{display:flex;gap:6px}
+.fstars button{width:52px;height:52px;border-radius:12px;border:3px solid var(--ink);background:#fff;font-size:30px;color:var(--sun);-webkit-text-stroke:1px var(--ink);padding:0}
+.fstars button:hover,.fstars button:focus-visible{background:var(--sand)}
 .sayb{display:inline-grid;place-items:center;vertical-align:middle;margin-left:10px;width:40px;height:40px;border-radius:50%;border:3px solid var(--ink);background:var(--sun);
   font-size:18px;line-height:1;padding:0;box-shadow:2px 2px 0 var(--ink);font-family:system-ui,sans-serif;-webkit-text-stroke:0;cursor:pointer}
 .sayb:active{transform:translate(2px,2px);box-shadow:none}
@@ -1041,7 +1062,7 @@ SUBJECTS.push(
    desc:"Giv kunderne den frisure, makeup og det tøj, de ønsker sig. Lås nye ting op ved at svare rigtigt.",
    plan:Array(LEVELS).fill("style"), games:{style:{}}},
   {id:"mode", arcade:true, subj:"Spillehal", name:"Modeshowet", art:"👗", c:"var(--grape)", map:"#d9cfff",
-   desc:"Læs temaet, style din model før tiden løber ud, og gå på catwalken. Dommerne giver point, og du dyster om førstepladsen.",
+   desc:"Læs temaet, gå rundt i omklædningsrummet og vælg tøj i lag, før tiden løber ud. Gå catwalken med en pose, og stem på de andre modeller.",
    plan:Array(LEVELS).fill("fashion"), games:{fashion:{}}},
 );
 const bandFor = s => bandOf(s.cat || s.id);
@@ -3574,91 +3595,393 @@ const SHOWS = [
 ];
 const RIVALS = ["Ella","Noah","Freja","Oscar","Ida","Malthe","Alma","Liam","Clara","Emil"];
 const JUDGES = [["🦩","Flora Flamingo"],["🐼","Pelle Panda"],["🦊","Rikke Ræv"]];
-function playFashion(stage, b, d){
-  const show = SHOWS[(d - 1) % SHOWS.length], en = b === 3;
-  const secs = Math.max(45, 100 - d*5);
-  let L = Object.assign({}, STY_DEFAULT), tab = "outfit", left = secs, timer = 0, done = false, bonus = 0, timers = [];
-  const swatch = c => `<span class="dotc" style="background:${SCOL[c]}"></span>`;
-  const hint = b === 1 ? `<div class="row" style="justify-content:flex-start;gap:6px;margin-top:6px">${(show.p.outfitColor || []).map(swatch).join("")}
-      ${(show.p.acc || []).filter(a => a !== "ingen").map(a => `<span class="tag">${optName("acc", a)}</span>`).join("")}
-      ${(show.p.outfit || []).map(o => `<span class="tag">${optName("outfit", o)}</span>`).join("")}</div>` : "";
-  stage.innerHTML = `<div class="styl">
-    <div class="model">
-      <div class="bubble" style="width:100%"><b style="font-family:var(--display);font-weight:400;font-size:22px">${show.e} ${en ? "Theme" : "Tema"}: ${en ? show.en : show.da}</b><br>${esc(en ? show.ed : show.dd)}${hint}</div>
-      <div class="timer" style="width:100%" aria-hidden="true"><i id="ftbar"></i></div>
-      <div id="fmodel"></div></div>
-    <div><div class="tabs" id="ftabs">${Object.keys(STY).map(k => `<button data-t="${k}">${STY[k].label}</button>`).join("")}</div>
-      <div class="choices" id="fch"></div>
-      <div class="row" style="justify-content:flex-start;margin-top:14px"><button class="btn main" id="fgo">Gå på catwalken ✨</button></div>
-      <p class="fb" id="ffb" style="text-align:left"></p></div></div>`;
-  setStatus(`${show.e} ${en ? show.en : show.da}`);
-  const draw = () => {
-    $("#fmodel").innerHTML = styleSVG(L);
-    document.querySelectorAll("#ftabs button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.t === tab)));
-    const st = STY[tab];
-    $("#fch").innerHTML = st.colors
-      ? st.colors.map(v => `<button class="choice sw ${styOpen(tab, v) ? "" : "locked"}" data-v="${v}" style="background:${v === "ingen" ? "repeating-linear-gradient(45deg,#fff 0 6px,#eee 6px 12px)" : SCOL[v]}" aria-label="${v}" aria-pressed="${L[tab] === v}"></button>`).join("")
-      : st.opts.map(([v, name]) => `<button class="choice ${styOpen(tab, v) ? "" : "locked"}" data-v="${v}" aria-pressed="${L[tab] === v}">${name}</button>`).join("");
-  };
-  $("#ftabs").onclick = e => { const x = e.target.closest("button"); if (!x) return; tab = x.dataset.t; sfx.pop(); draw(); };
-  $("#fch").onclick = e => {
-    const x = e.target.closest(".choice"); if (!x || done) return;
-    const v = x.dataset.v, cat = tab;
-    if (!styOpen(cat, v)){
-      const nm = STY[cat].colors ? `${STY[cat].label.toLowerCase()}: ${v}` : optName(cat, v).toLowerCase();
-      askQuestion(b, `Lås ${nm} op`, "Svar rigtigt for at låse den op for altid. Den kan også bruges i Stylisten.", () => { S.unlocks.push(`sty:${cat}:${v}`); save(); L[cat] = v; draw(); });
-      return;
-    }
-    L[cat] = v; sfx.pop(); draw();
-  };
-  timer = setInterval(() => {
-    if (done || !$("#veil").hidden) return;
-    left--; const bar = $("#ftbar");
-    if (bar){ bar.style.transform = `scaleX(${left/secs})`; bar.style.background = left < secs*.3 ? "var(--bad)" : left < secs*.6 ? "var(--sun)" : "var(--leaf)"; }
-    if (left <= 0) runway();
-  }, 1000);
-  $("#fgo").onclick = runway;
-  function themeScore(){
-    const cats = Object.keys(show.p); let hit = 0;
-    for (const c of cats) if (show.p[c].includes(L[c])) hit++;
-    return hit / cats.length;
+/* ---------- Modeshowet: tøjkatalog ---------- */
+const SHOW_TAGS = [ // matcher SHOWS i rækkefølge
+  {t:["sommer"], c:["gul","hvid","blå","orange"]}, {t:["kongelig","fin"], c:["lilla","pink","hvid"]}, {t:["helt"], c:["rød","blå"]},
+  {t:["rock"], c:["sort","lilla","rød"]}, {t:["vinter"], c:["hvid","blå"]}, {t:["fest"], c:["pink","lilla"]},
+  {t:["sport"], c:["grøn","blå","rød"]}, {t:["uhygge"], c:["sort","lilla","orange"]},
+];
+const FC = {
+  top:{label:"Overdele", e:"👕", items:[["tshirt","T-shirt",["sommer","sport","hverdag"]],["lang","Langærmet bluse",["vinter","hverdag"]],["crop","Kort top",["sommer","fest"]],["hoodie","Hættetrøje",["vinter","sport"]],["skjorte","Skjorte",["fin","rock"]],["helt","Heltetrøje",["helt"]]], free:["tshirt","lang","hoodie"], garment:true},
+  bottom:{label:"Underdele", e:"👖", items:[["bukser","Bukser",["vinter","fin","rock","hverdag"]],["shorts","Shorts",["sommer","sport"]],["nederdel","Nederdel",["fest","sommer","fin"]],["langned","Lang nederdel",["fin","kongelig"]],["heltbuks","Heltebukser",["helt"]]], free:["bukser","shorts","nederdel"], garment:true},
+  dress:{label:"Kjoler", e:"👗", items:[["ingen","Ingen kjole",[]],["sommer","Sommerkjole",["sommer","fest"]],["bal","Balkjole",["kongelig","fin","fest"]],["heks","Heksekjole",["uhygge"]],["helt","Superheltedragt",["helt"]]], free:["ingen","sommer"], garment:true},
+  outer:{label:"Overtøj", e:"🧥", items:[["ingen","Intet overtøj",[]],["cardigan","Cardigan",["vinter","hverdag"]],["laeder","Læderjakke",["rock"]],["dyne","Dynejakke",["vinter"]],["blazer","Blazer",["fin"]],["kappe","Kappe",["helt","kongelig","uhygge"]]], free:["ingen","cardigan"], garment:true},
+  shoes:{label:"Sko", e:"👟", items:[["sneakers","Sneakers",["sport","sommer","hverdag"]],["stovler","Støvler",["vinter","rock","uhygge"]],["sandaler","Sandaler",["sommer"]],["haele","Høje hæle",["fin","fest","kongelig"]]], free:["sneakers","stovler"]},
+  acc:{label:"Pynt", e:"👑", items:[["ingen","Ingen",[]],["krone","Krone",["kongelig"]],["solbriller","Solbriller",["sommer","rock"]],["blomst","Hårbøjle med blomst",["fest","sommer"]],["sommerhat","Sommerhat",["sommer"]],["heksehat","Heksehat",["uhygge"]],["hovedtlf","Hovedtelefoner",["rock","sport"]],["sloejfe","Sløjfe",["fest"]],["hue","Hue",["vinter"]],["maske","Heltemaske",["helt"]]], free:["ingen","solbriller","hue"]},
+  bag:{label:"Tasker", e:"👜", items:[["ingen","Ingen",[]],["haand","Håndtaske",["fin","fest"]],["ryg","Rygsæk",["sport","hverdag"]],["strand","Strandtaske",["sommer"]]], free:["ingen","ryg"]},
+};
+const FCOL = ["rød","blå","grøn","gul","pink","lilla","sort","hvid","orange"], FCOL_FREE = ["rød","blå","grøn","sort","hvid"];
+const FPAT = [["ens","Ensfarvet",[]],["striber","Striber",["sport","sommer"]],["prikker","Prikker",["fest"]],["blomster","Blomster",["sommer","fest"]],["tern","Tern",["vinter","rock"]]], FPAT_FREE = ["ens","striber"];
+const FHAIR = [["short","Kort"],["long","Langt"],["pony","Hestehale"],["bun","Knold"],["curls","Krøller"]], FHAIR_FREE = ["short","long"];
+const FHAIRCOL = {brun:"#6e4529", sort:"#2a2a2a", blond:"#ecd08a", rød:"#c2502b", blå:"#3d7bff", pink:"#ff7eb6", lilla:"#9b5cff"};
+const fOpen = key => S.unlocks.includes("fm:" + key);
+const fItemOpen = (cat, id) => FC[cat].free.includes(id) || fOpen(`${cat}:${id}`);
+const fColOpen = c => FCOL_FREE.includes(c) || fOpen("col:" + c);
+const fPatOpen = p => FPAT_FREE.includes(p) || fOpen("pat:" + p);
+const fHairOpen = h => FHAIR_FREE.includes(h) || fOpen("hair:" + h);
+const fHairColOpen = c => ["brun","sort","blond"].includes(c) || fOpen("haircol:" + c);
+const F_DEFAULT = () => ({skin:"#f6d2b8", hair:"long", hairCol:"brun", lips:"natur", shadow:"ingen",
+  top:{id:"tshirt", col:"hvid", pat:"ens"}, bottom:{id:"bukser", col:"blå", pat:"ens"}, dress:{id:"ingen", col:"rød", pat:"ens"},
+  outer:{id:"ingen", col:"sort", pat:"ens"}, shoes:{id:"sneakers", col:"hvid"}, acc:{id:"ingen"}, bag:{id:"ingen", col:"rød"}});
+const fItem = (cat, id) => FC[cat].items.find(x => x[0] === id);
+function fashionScore(F, tagset){
+  const want = tagset.t, cols = tagset.c, has = tags => tags.some(t => want.includes(t));
+  let raw = 0;
+  const garments = F.dress.id !== "ingen" ? [["dress", F.dress, 2]] : [["top", F.top, 1], ["bottom", F.bottom, 1]];
+  if (F.outer.id !== "ingen") garments.push(["outer", F.outer, 1]);
+  for (const [cat, g, w] of garments){
+    if (has(fItem(cat, g.id)[2])) raw += w;
+    if (cols.includes(g.col)) raw += .8;
+    const p = FPAT.find(x => x[0] === g.pat); if (p && has(p[2])) raw += .5;
   }
-  function runway(){
-    if (done) return; done = true; clearInterval(timer);
-    const ratio = themeScore();
-    stage.innerHTML = `<div class="runway" id="rw">
-      <div class="spot"></div><div class="walker" id="walker">${styleSVG(L)}</div>
-      <div class="rwtitle">${show.e} ${en ? show.en : show.da}</div></div>
-      <div class="judges" id="judges">${JUDGES.map(([e,n]) => `<div class="judge"><span class="je">${e}</span><span class="jn">${n}</span><span class="js">…</span></div>`).join("")}</div>
-      <p class="fb" id="rwfb">Modellen går på catwalken …</p>`;
-    sfx.win();
-    timers.push(setTimeout(() => {
-      askQuestion(b, "Dommerne har et spørgsmål!", "Svar rigtigt, så får du et ekstra point af hver dommer.", () => { bonus = 1; });
-      const wait = setInterval(() => { if ($("#veil").hidden){ clearInterval(wait); judge(ratio); } }, 300);
-      timers.push(wait);
-    }, 2600));
-  }
-  function judge(ratio){
-    const base = 1 + ratio * 3.6;
-    const scores = JUDGES.map(() => Math.max(1, Math.min(5, Math.round(base + (Math.random() - .5) * 1.2) + bonus)));
-    const mine = scores.reduce((a, c) => a + c, 0);
-    const lvl = 7 + d * .5;
-    const rivals = shuffle(RIVALS).slice(0, 2).map(n => ({n, s: Math.max(3, Math.min(15, Math.round(lvl + (Math.random() - .5) * 5)))}));
-    document.querySelectorAll("#judges .js").forEach((el, i) => timers.push(setTimeout(() => { el.textContent = "★".repeat(scores[i]) + "☆".repeat(5 - scores[i]); el.parentElement.classList.add("up"); sfx.pop(); }, 500 + i*700)));
-    timers.push(setTimeout(() => {
-      const all = [{n:(S.name || "Dig") + " (dig)", s:mine, me:true}, ...rivals].sort((a, c) => c.s - a.s || (c.me ? 1 : -1));
-      const place = all.findIndex(x => x.me) + 1;
-      setScore(mine * 10 + (bonus ? 20 : 0));
-      $("#rwfb").innerHTML = `<div class="podium">${all.map((x, i) => `<div class="pod p${i+1} ${x.me ? "me" : ""}"><b>${["🥇","🥈","🥉"][i]}</b>${esc(x.n)}<small>${x.s} point</small></div>`).join("")}</div>`;
-      if (place === 1){ confetti(200); sfx.win(); }
-      const stars = place === 1 ? 3 : place === 2 ? 2 : mine >= 6 ? 1 : 0;
-      const tip = ratio < .6 ? ` Tip: ${en ? "Læs temaet igen" : "Læs temaet igen"} og vælg det, der passer.` : "";
-      timers.push(setTimeout(() => finish(stars, `Du fik ${mine} af 15 point og blev nr. ${place}.${tip}`), 2600));
-    }, 500 + JUDGES.length*700 + 400));
-  }
-  draw();
-  return () => { clearInterval(timer); timers.forEach(t => { clearTimeout(t); clearInterval(t); }); };
+  if (has(fItem("shoes", F.shoes.id)[2])) raw += 1;
+  if (F.acc.id !== "ingen" && has(fItem("acc", F.acc.id)[2])) raw += 1;
+  if (F.bag.id !== "ingen" && has(fItem("bag", F.bag.id)[2])) raw += 1;
+  if ((want.includes("fest") || want.includes("kongelig")) && ["pink","rød"].includes(F.lips)) raw += .5;
+  if (want.includes("uhygge") && ["lilla"].includes(F.lips)) raw += .5;
+  return Math.min(1, raw / 6.5);
 }
+function randomOutfit(tagset, matchP){
+  const F = F_DEFAULT(), want = tagset.t;
+  const pickItem = cat => { const items = FC[cat].items.filter(x => x[0] !== "ingen");
+    const good = items.filter(x => x[2].some(t => want.includes(t)));
+    return (Math.random() < matchP && good.length ? pick(good) : pick(items))[0]; };
+  const pickCol = () => Math.random() < matchP ? pick(tagset.c) : pick(FCOL);
+  if (Math.random() < .4){ F.dress = {id:pickItem("dress"), col:pickCol(), pat:pick(FPAT)[0]}; }
+  else { F.top = {id:pickItem("top"), col:pickCol(), pat:pick(FPAT)[0]}; F.bottom = {id:pickItem("bottom"), col:pickCol(), pat:pick(FPAT)[0]}; }
+  if (Math.random() < .5) F.outer = {id:pickItem("outer"), col:pickCol(), pat:"ens"};
+  F.shoes = {id:pickItem("shoes"), col:pickCol()};
+  if (Math.random() < .7) F.acc = {id:pickItem("acc")};
+  if (Math.random() < .4) F.bag = {id:pickItem("bag"), col:pickCol()};
+  F.hair = pick(FHAIR)[0]; F.hairCol = pick(Object.keys(FHAIRCOL)); F.skin = pick(SKINS);
+  F.lips = pick(["natur","rød","pink","lilla"]);
+  return F;
+}
+
+/* ---------- Modeshowet: 3D-model med tøj i lag ---------- */
+const PATTEX = {};
+function patMat(colName, pat){
+  const T = THREE, hex = SCOL[colName] || colName;
+  if (!pat || pat === "ens") return new T.MeshLambertMaterial({color:hex});
+  const key = hex + pat;
+  if (!PATTEX[key]){
+    const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+    x.fillStyle = hex; x.fillRect(0,0,64,64);
+    const light = ["sort","blå","lilla","rød","grøn"].includes(colName) ? "#ffffffcc" : "#1d2742aa";
+    if (pat === "striber"){ x.fillStyle = light; for (let i = 0; i < 64; i += 16) x.fillRect(0, i, 64, 7); }
+    if (pat === "prikker"){ x.fillStyle = light; for (let i = 8; i < 64; i += 16) for (let j = 8; j < 64; j += 16) { x.beginPath(); x.arc(i + (j % 32 ? 8 : 0), j, 4, 0, 7); x.fill(); } }
+    if (pat === "blomster"){ for (let i = 0; i < 6; i++){ const fx = 8 + (i*23) % 56, fy = 8 + (i*37) % 56; x.fillStyle = i % 2 ? "#ff8fb3" : "#fffaf0";
+      for (let k = 0; k < 5; k++){ x.beginPath(); x.arc(fx + Math.cos(k*1.26)*4, fy + Math.sin(k*1.26)*4, 3, 0, 7); x.fill(); } x.fillStyle = "#ffd23f"; x.beginPath(); x.arc(fx, fy, 2, 0, 7); x.fill(); } }
+    if (pat === "tern"){ x.fillStyle = light; for (let i = 0; i < 64; i += 16){ x.fillRect(i, 0, 5, 64); x.fillRect(0, i, 64, 5); } }
+    const tex = new T.CanvasTexture(c); tex.magFilter = T.NearestFilter; PATTEX[key] = tex;
+  }
+  return new T.MeshLambertMaterial({map:PATTEX[key]});
+}
+function makeModel(F){
+  const T = THREE, g = new T.Group(), A = {g}, M = {};
+  const col = c => M[c] || (M[c] = new T.MeshLambertMaterial({color:SCOL[c] || c}));
+  const box = (w,h,d,x,y,z,m,parent=g) => { const o = new T.Mesh(new T.BoxGeometry(w,h,d), m); o.position.set(x,y,z); parent.add(o); return o; };
+  const cyl = (rt,rb,h,x,y,z,m,parent=g,seg=14) => { const o = new T.Mesh(new T.CylinderGeometry(rt,rb,h,seg), m); o.position.set(x,y,z); parent.add(o); return o; };
+  const skin = col(F.skin), dressOn = F.dress.id !== "ingen";
+  const topM = dressOn ? patMat(F.dress.col, F.dress.pat) : patMat(F.top.col, F.top.pat);
+  const botM = patMat(F.bottom.col, F.bottom.pat);
+  const outerOn = F.outer.id !== "ingen" && F.outer.id !== "kappe", outM = patMat(F.outer.col, F.outer.pat);
+  // ben
+  const legMats = () => {
+    if (dressOn) return [skin, skin];
+    if (F.bottom.id === "bukser" || F.bottom.id === "heltbuks") return [botM, botM];
+    if (F.bottom.id === "shorts") return [botM, skin];
+    return [skin, skin];
+  };
+  const [upM, loM] = legMats();
+  const leg = x => { const pv = new T.Group(); pv.position.set(x,.8,0); g.add(pv);
+    box(.36,.4,.36, 0,-.2,0, upM, pv); box(.34,.4,.34, 0,-.6,0, loM, pv);
+    const sc = col(F.shoes.col);
+    if (F.shoes.id === "stovler"){ box(.4,.42,.4, 0,-.62,.0, sc, pv); box(.4,.08,.48, 0,-.8,.04, col("sort"), pv); }
+    else if (F.shoes.id === "haele"){ box(.34,.1,.42, 0,-.76,.05, sc, pv); box(.1,.18,.1, 0,-.86,-.12, sc, pv); }
+    else if (F.shoes.id === "sandaler"){ box(.38,.05,.46, 0,-.82,.04, col("hvid"), pv); box(.36,.06,.06, 0,-.76,.1, sc, pv); }
+    else { box(.4,.14,.48, 0,-.78,.05, sc, pv); box(.4,.04,.48, 0,-.86,.05, col("hvid"), pv); }
+    return pv; };
+  A.legL = leg(-.2); A.legR = leg(.2);
+  // nederdel / kjole-skørt
+  if (dressOn){
+    const long = F.dress.id === "bal" || F.dress.id === "heks";
+    cyl(.44, long ? .72 : .6, long ? 1.0 : .5, 0, long ? .42 : .64, 0, topM);
+  } else if (F.bottom.id === "nederdel") cyl(.44,.6,.48, 0,.66,0, botM);
+  else if (F.bottom.id === "langned") cyl(.44,.66,.9, 0,.45,0, botM);
+  // krop
+  if (!dressOn && F.top.id === "crop"){ box(.8,.42,.42, 0,1.39,0, topM); box(.78,.38,.4, 0,.99,0, skin); }
+  else box(.8,.8,.42, 0,1.2,0, topM);
+  if (!dressOn && F.top.id === "helt") box(.3,.3,.02, 0,1.3,.22, col("gul"));
+  if (dressOn && F.dress.id === "helt") box(.3,.3,.02, 0,1.3,.22, col("gul"));
+  if (!dressOn && F.top.id === "skjorte") box(.2,.12,.02, 0,1.56,.22, col("hvid"));
+  // arme
+  const longSleeve = outerOn || (!dressOn && ["lang","hoodie","skjorte","helt"].includes(F.top.id)) || (dressOn && F.dress.id === "helt");
+  const sleeveM = outerOn ? outM : topM;
+  const arm = x => { const pv = new T.Group(); pv.position.set(x,1.55,0); g.add(pv);
+    if (longSleeve) box(.3,.7,.3, 0,-.35,0, sleeveM, pv); else { box(.31,.28,.31, 0,-.14,0, dressOn ? skin : sleeveM, pv); box(.28,.42,.28, 0,-.49,0, skin, pv); }
+    box(.26,.12,.26, 0,-.74,0, skin, pv); return pv; };
+  A.armL = arm(-.58); A.armR = arm(.58);
+  // overtøj
+  if (outerOn){
+    const puff = F.outer.id === "dyne" ? 1.08 : 1;
+    box(.84*puff,.84,.06, 0,1.2,-.24, outM); box(.08,.84,.46*puff, -.43*puff,1.2,0, outM); box(.08,.84,.46*puff, .43*puff,1.2,0, outM);
+    box(.24,.84,.06, -.3,1.2,.24, outM); box(.24,.84,.06, .3,1.2,.24, outM);
+    if (F.outer.id === "dyne") [1.0,1.2,1.4].forEach(y => box(.9,.04,.5, 0,y,0, col("hvid")));
+  }
+  if (F.outer.id === "kappe"){ box(.95,1.25,.05, 0,1.0,-.28, outM); box(.9,.1,.5, 0,1.6,0, outM); }
+  if (!dressOn && F.top.id === "hoodie" && !outerOn) box(.5,.34,.14, 0,1.72,-.3, topM);
+  // hoved
+  box(.56,.56,.56, 0,1.88,0, skin);
+  box(.09,.12,.02, -.12,1.94,.29, col("sort")); box(.09,.12,.02, .12,1.94,.29, col("sort"));
+  if (F.shadow !== "ingen"){ box(.13,.05,.02, -.12,2.02,.29, col(F.shadow)); box(.13,.05,.02, .12,2.02,.29, col(F.shadow)); }
+  box(.2,.06,.02, 0,1.77,.29, col(F.lips === "natur" ? "#c9706a" : F.lips));
+  box(.08,.05,.02, -.2,1.82,.29, col("#ff9fb0")); box(.08,.05,.02, .2,1.82,.29, col("#ff9fb0"));
+  // hår
+  const hc = col(FHAIRCOL[F.hairCol] || F.hairCol);
+  box(.6,.14,.6, 0,2.21,0, hc); box(.6,.42,.12, 0,1.98,-.26, hc);
+  if (F.hair === "long"){ box(.64,.8,.14, 0,1.74,-.28, hc); box(.1,.56,.5, -.31,1.86,-.02, hc); box(.1,.56,.5, .31,1.86,-.02, hc); }
+  if (F.hair === "short"){ box(.1,.22,.44, -.31,2.02,-.04, hc); box(.1,.22,.44, .31,2.02,-.04, hc); }
+  if (F.hair === "pony"){ box(.2,.2,.2, 0,2.1,-.38, hc); box(.16,.5,.16, 0,1.84,-.44, hc); }
+  if (F.hair === "bun") box(.28,.26,.28, 0,2.4,-.12, hc);
+  if (F.hair === "curls") [[-.3,2.1],[.3,2.1],[-.3,1.85],[.3,1.85],[-.2,2.28],[.2,2.28],[0,2.3]].forEach(([x,y]) => box(.2,.2,.2, x,y,-.12, hc));
+  // pynt
+  const top = 2.28, a = F.acc.id;
+  if (a === "krone"){ box(.6,.16,.6, 0,top+.06,0, col("gul")); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([p,q]) => box(.12,.16,.12, p*.24,top+.22,q*.24, col("gul"))); }
+  if (a === "solbriller"){ box(.22,.13,.03, -.13,1.94,.31, col("sort")); box(.22,.13,.03, .13,1.94,.31, col("sort")); box(.08,.03,.03, 0,1.96,.31, col("sort")); }
+  if (a === "blomst"){ box(.66,.06,.08, 0,top-.02,0, col("blå")); box(.3,.1,.3, -.2,top+.06,.05, col("gul")); box(.22,.12,.22, -.2,top+.1,.05, col("lilla")); box(.12,.13,.12, -.2,top+.14,.05, col("#7fd3f0")); }
+  if (a === "sommerhat"){ cyl(.6,.6,.05, 0,top,0, col("#f3d58a"), g, 20); cyl(.3,.32,.28, 0,top+.15,0, col("#f3d58a")); box(.62,.06,.62, 0,top+.06,0, col("rød")); }
+  if (a === "heksehat"){ cyl(.6,.6,.05, 0,top,0, col("sort"), g, 20); const cone = new T.Mesh(new T.ConeGeometry(.32,.75,14), col("sort")); cone.position.set(0,top+.4,0); cone.rotation.z = .12; g.add(cone); box(.62,.08,.62, 0,top+.06,0, col("lilla")); }
+  if (a === "hovedtlf"){ box(.66,.08,.12, 0,top+.02,0, col("sort")); box(.12,.22,.22, -.34,1.92,0, col("rød")); box(.12,.22,.22, .34,1.92,0, col("rød")); }
+  if (a === "sloejfe"){ box(.18,.16,.06, .14,top+.06,.08, col("pink")); box(.18,.16,.06, .38,top+.06,.08, col("pink")); box(.08,.1,.08, .26,top+.06,.08, col("rød")); }
+  if (a === "hue"){ box(.62,.26,.62, 0,top+.06,0, col("rød")); box(.18,.14,.18, 0,top+.25,0, col("hvid")); }
+  if (a === "maske"){ box(.6,.12,.04, 0,1.95,.3, col("sort")); }
+  // taske
+  const bc = col(F.bag.col || "rød");
+  if (F.bag.id === "haand"){ box(.32,.24,.12, .6,.72,.12, bc, A.armR.parent); }
+  if (F.bag.id === "ryg"){ box(.6,.6,.2, 0,1.25,-.33, bc); }
+  if (F.bag.id === "strand"){ box(.44,.36,.16, .62,.68,.1, bc); }
+  return A;
+}
+
+/* ---------- Modeshowet: omklædningsrum → catwalk → afstemning ---------- */
+const POSES = [["hofter","🙌 Hænder i siden"],["vink","👋 Vink"],["sejr","✌️ Sejr"],["drej","💫 Snurretur"]];
+function playFashion(stage, b, d){
+  const showIdx = (d - 1) % SHOWS.length, show = SHOWS[showIdx], tags = SHOW_TAGS[showIdx], en = b === 3;
+  const secs = Math.max(60, 125 - d*5);
+  let F = Object.assign(F_DEFAULT(), S.fashionLast ? JSON.parse(JSON.stringify(S.fashionLast)) : {});
+  let alive = true, raf = 0, R = null, phase = "room", left = secs, panelCat = null, offs = [], timers = [];
+  const on = (el, ev, fn) => { el.addEventListener(ev, fn); offs.push(() => el.removeEventListener(ev, fn)); };
+  stage.innerHTML = `<div class="fashion3d" id="f3">
+    <div class="fhud"><div class="ftheme"><div class="q-text" style="font-size:clamp(15px,2.6vw,19px);text-align:left;padding:0"><b>${show.e} ${en ? "Theme" : "Tema"}: ${en ? show.en : show.da}.</b> ${esc(en ? show.ed : show.dd)}</div>
+      <div class="timer"><i id="ftbar"></i></div></div><button class="btn main" id="fdone">Færdig ✨</button></div>
+    <div class="fhint" id="fhint">Tryk på gulvet eller et stativ for at gå derhen.</div>
+    <div class="fpanel" id="fpanel" hidden></div><div class="fstage" id="fstageUI"></div>
+    <div class="msg" id="fmsg">Indlæser …</div></div>`;
+  setStatus(`${show.e} ${en ? show.en : show.da}`);
+  loadThree().then(() => alive && init()).catch(() => { if (alive) $("#fmsg").textContent = "Kunne ikke hente 3D-motoren. Tjek internettet."; });
+
+  const STATIONS = [["top",-4.6,-2.6],["bottom",-1.6,-3.6],["dress",1.6,-3.6],["outer",4.6,-2.6],["shoes",5.2,.9],["hair",4.2,3.2],["bag",-4.2,3.2],["acc",-5.2,.9]];
+  function init(){
+    const T = THREE, box = $("#f3");
+    const r = new T.WebGLRenderer({antialias:true}); r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); box.prepend(r.domElement);
+    R = {T, r, mat:c => new T.MeshLambertMaterial({color:c})};
+    R.room = buildRoom(); R.cam = new T.PerspectiveCamera(55, 1, .1, 200);
+    R.cam.position.set(0, 8.5, 10); R.cam.lookAt(0, .6, 0);
+    R.pos = new T.Vector3(0,0,.5); R.target = null; R.walk = 0;
+    rebuildModel();
+    resize(); on(window, "resize", resize);
+    $("#fmsg").textContent = "";
+    const ray = new T.Raycaster(), ndc = new T.Vector2();
+    let sx = 0, sy = 0;
+    on(r.domElement, "pointerdown", e => { sx = e.clientX; sy = e.clientY; });
+    on(r.domElement, "pointerup", e => {
+      if (phase !== "room" || Math.hypot(e.clientX - sx, e.clientY - sy) > 12) return;
+      const rect = r.domElement.getBoundingClientRect();
+      ndc.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1);
+      ray.setFromCamera(ndc, R.cam);
+      const hit = ray.intersectObjects(R.clickables, true)[0];
+      if (!hit) return;
+      let o = hit.object; while (o && !o.userData.station && o.parent) o = o.parent;
+      if (o && o.userData.station){ const st = STATIONS.find(s => s[0] === o.userData.station); R.target = new T.Vector3(st[1]*.72, 0, st[2]*.72); R.goal = st[0]; }
+      else { R.target = hit.point.clone().setY(0); R.goal = null; }
+      R.target.x = Math.max(-5.5, Math.min(5.5, R.target.x)); R.target.z = Math.max(-3.4, Math.min(4, R.target.z));
+      closePanel();
+    });
+    $("#fdone").onclick = () => startShow();
+    timers.push(setInterval(() => {
+      if (phase !== "room" || !$("#veil").hidden) return;
+      left--; const bar = $("#ftbar"); if (bar){ bar.style.transform = `scaleX(${left/secs})`; bar.style.background = left < secs*.3 ? "var(--bad)" : left < secs*.6 ? "var(--sun)" : "var(--leaf)"; }
+      if (left <= 0) startShow();
+    }, 1000));
+    raf = requestAnimationFrame(loop);
+  }
+  function resize(){ const el = $("#f3"); if (!R || !el) return; const w = el.clientWidth, h = el.clientHeight; R.r.setSize(w, h, false); R.cam.aspect = w/h; R.cam.updateProjectionMatrix(); }
+  function label(text, x, y, z, parent){ const s = textSprite(text); s.scale.set(2.6,.65,1); s.position.set(x,y,z); parent.add(s); return s; }
+  function buildRoom(){
+    const T = R.T, sc = new T.Scene(); sc.background = new T.Color("#ffe6f2");
+    sc.add(new T.HemisphereLight("#ffffff", "#c9a7f5", .95)); const sun = new T.DirectionalLight("#fff3d6", .5); sun.position.set(5,10,6); sc.add(sun);
+    R.clickables = [];
+    const floor = new T.Mesh(new T.PlaneGeometry(14, 10), new T.MeshLambertMaterial({color:"#fff4fa"})); floor.rotation.x = -Math.PI/2; sc.add(floor); R.clickables.push(floor);
+    for (let i = -6; i <= 6; i += 2) for (let j = -4; j <= 4; j += 2){ const t = new T.Mesh(new T.PlaneGeometry(1,1), new T.MeshLambertMaterial({color:"#ffd3e8"})); t.rotation.x = -Math.PI/2; t.position.set(i+.5, .005, j+.5); sc.add(t); }
+    const wall = new T.Mesh(new T.BoxGeometry(14,5,.3), R.mat("#d9cfff")); wall.position.set(0,2.5,-5); sc.add(wall);
+    const mirror = new T.Mesh(new T.BoxGeometry(2.2,3,.1), R.mat("#bfe6f5")); mirror.position.set(0,2.2,-4.82); sc.add(mirror);
+    const frame = new T.Mesh(new T.BoxGeometry(2.5,3.3,.08), R.mat("#ffc22e")); frame.position.set(0,2.2,-4.86); sc.add(frame);
+    label("🪞 Spejl", 0, 4.1, -4.7, sc);
+    STATIONS.forEach(([cat, x, z]) => {
+      const g = new T.Group(); g.position.set(x, 0, z); g.userData.station = cat; sc.add(g); R.clickables.push(g);
+      const c = FC[cat] || {label:"Frisør & makeup", e:"💇"};
+      const post = (px) => { const p = new T.Mesh(new T.BoxGeometry(.12,2,.12), R.mat("#c9c9d1")); p.position.set(px,1,0); g.add(p); };
+      if (cat === "hair"){ const tb = new T.Mesh(new T.BoxGeometry(1.6,.8,.7), R.mat("#ffffff")); tb.position.y = .4; g.add(tb); const m = new T.Mesh(new T.BoxGeometry(1.2,1.2,.08), R.mat("#bfe6f5")); m.position.set(0,1.5,-.3); g.add(m); }
+      else if (cat === "shoes" || cat === "bag" || cat === "acc"){ const sh = new T.Mesh(new T.BoxGeometry(1.8,1.1,.6), R.mat("#ffffff")); sh.position.y = .55; g.add(sh);
+        ["#ff6a55","#3d9bff","#ffc22e"].forEach((col, i) => { const it = new T.Mesh(new T.BoxGeometry(.38,.28,.38), R.mat(col)); it.position.set(-.55 + i*.55, 1.25, 0); g.add(it); }); }
+      else { post(-.9); post(.9); const bar = new T.Mesh(new T.BoxGeometry(1.95,.08,.08), R.mat("#c9c9d1")); bar.position.y = 1.95; g.add(bar);
+        ["#ff6a55","#3d9bff","#2fa65a","#ff7eb6","#ffc22e"].forEach((col, i) => { const it = new T.Mesh(new T.BoxGeometry(.32, cat === "dress" ? 1.1 : .75, .1), R.mat(col)); it.position.set(-.7 + i*.35, cat === "dress" ? 1.35 : 1.5, 0); it.rotation.y = .9; g.add(it); }); }
+      g.lookAt(0, 0, .5);
+      label(`${c.e} ${c.label}`, x, 2.75, z, sc);
+    });
+    return sc;
+  }
+  function rebuildModel(){
+    if (R.model) R.model.g.parent && R.model.g.parent.remove(R.model.g);
+    R.model = makeModel(F); R.model.g.position.copy(R.pos); R.room.add(R.model.g);
+    S.fashionLast = F; save();
+  }
+  function closePanel(){ panelCat = null; $("#fpanel").hidden = true; }
+  function openPanel(cat){
+    panelCat = cat; const p = $("#fpanel"); p.hidden = false; $("#fhint").hidden = true;
+    const lockQ = (key, nice, apply) => askQuestion(b, `Lås ${nice} op`, "Svar rigtigt for at låse den op for altid.", () => { S.unlocks.push("fm:" + key); save(); apply(); });
+    const sw = (c, open, on) => `<button class="choice sw ${open ? "" : "locked"}" data-c="${c}" style="background:${SCOL[c] || FHAIRCOL[c]}" aria-label="${c}" aria-pressed="${on}"></button>`;
+    let html = "";
+    if (cat === "hair"){
+      html = `<h3>💇 Frisør & makeup</h3>
+        <span class="lbl">Frisure</span><div class="choices">${FHAIR.map(([id,n]) => `<button class="choice ${fHairOpen(id) ? "" : "locked"}" data-hair="${id}" aria-pressed="${F.hair===id}">${n}</button>`).join("")}</div>
+        <span class="lbl">Hårfarve</span><div class="choices">${Object.keys(FHAIRCOL).map(c => `<button class="choice sw ${fHairColOpen(c) ? "" : "locked"}" data-hc="${c}" style="background:${FHAIRCOL[c]}" aria-label="${c}" aria-pressed="${F.hairCol===c}"></button>`).join("")}</div>
+        <span class="lbl">Læbestift</span><div class="choices">${["natur","rød","pink","lilla","orange"].map(c => `<button class="choice sw" data-lip="${c}" style="background:${SCOL[c]}" aria-label="${c}" aria-pressed="${F.lips===c}"></button>`).join("")}</div>
+        <span class="lbl">Øjenskygge</span><div class="choices">${["ingen","blå","grøn","lilla","pink","gul"].map(c => `<button class="choice sw" data-sh="${c}" style="background:${c==="ingen"?"repeating-linear-gradient(45deg,#fff 0 6px,#eee 6px 12px)":SCOL[c]}" aria-label="${c}" aria-pressed="${F.shadow===c}"></button>`).join("")}</div>`;
+    } else {
+      const C = FC[cat], cur = F[cat];
+      html = `<h3>${C.e} ${C.label}</h3><div class="choices">${C.items.map(([id,n]) => `<button class="choice ${fItemOpen(cat,id) ? "" : "locked"}" data-item="${id}" aria-pressed="${cur.id===id}">${n}</button>`).join("")}</div>`;
+      if (cur.id !== "ingen" && cat !== "acc"){
+        html += `<span class="lbl">Farve</span><div class="choices">${FCOL.map(c => sw(c, fColOpen(c), cur.col===c)).join("")}</div>`;
+        if (C.garment) html += `<span class="lbl">Mønster</span><div class="choices">${FPAT.map(([id,n]) => `<button class="choice ${fPatOpen(id) ? "" : "locked"}" data-pat="${id}" aria-pressed="${cur.pat===id}">${n}</button>`).join("")}</div>`;
+      }
+      if (cat === "dress" && cur.id !== "ingen") html += `<p style="margin:6px 0 0;font-size:13px;color:var(--ink-soft)">En kjole erstatter overdel og underdel.</p>`;
+    }
+    p.innerHTML = `<button class="fclose" id="fclose" aria-label="Luk">✕</button>${html}`;
+    $("#fclose").onclick = closePanel;
+    p.onclick = e => {
+      const x = e.target.closest("button"); if (!x || x.id === "fclose") return;
+      const apply = fn => { fn(); sfx.pop(); rebuildModel(); openPanel(cat); };
+      if (x.dataset.item){ const id = x.dataset.item; const go = () => apply(() => { F[cat] = Object.assign({}, F[cat], {id}); if (cat === "top" || cat === "bottom") F.dress.id = "ingen"; });
+        return fItemOpen(cat, id) ? go() : lockQ(`${cat}:${id}`, fItem(cat,id)[1].toLowerCase(), go); }
+      if (x.dataset.c){ const c = x.dataset.c, go = () => apply(() => F[cat].col = c); return fColOpen(c) ? go() : lockQ("col:" + c, `farven ${c}`, go); }
+      if (x.dataset.pat){ const pt = x.dataset.pat, go = () => apply(() => F[cat].pat = pt); return fPatOpen(pt) ? go() : lockQ("pat:" + pt, `mønstret ${FPAT.find(q => q[0]===pt)[1].toLowerCase()}`, go); }
+      if (x.dataset.hair){ const h = x.dataset.hair, go = () => apply(() => F.hair = h); return fHairOpen(h) ? go() : lockQ("hair:" + h, FHAIR.find(q => q[0]===h)[1].toLowerCase(), go); }
+      if (x.dataset.hc){ const c = x.dataset.hc, go = () => apply(() => F.hairCol = c); return fHairColOpen(c) ? go() : lockQ("haircol:" + c, `hårfarven ${c}`, go); }
+      if (x.dataset.lip) apply(() => F.lips = x.dataset.lip);
+      if (x.dataset.sh) apply(() => F.shadow = x.dataset.sh);
+    };
+  }
+  /* ----- catwalk ----- */
+  function buildRunway(){
+    const T = R.T, sc = new T.Scene(); sc.background = new T.Color("#1b1440");
+    sc.add(new T.HemisphereLight("#ffffff", "#3b2a86", .7)); const key = new T.DirectionalLight("#fff3d6", .8); key.position.set(0,10,8); sc.add(key);
+    const run = new T.Mesh(new T.BoxGeometry(3.2,.3,18), R.mat("#f4f1ff")); run.position.set(0,.15,-2); sc.add(run);
+    for (let z = -10; z <= 6; z += 2) [-1.75,1.75].forEach(x => { const l = new T.Mesh(new T.BoxGeometry(.12,.12,.12), new T.MeshBasicMaterial({color:"#ffd23f"})); l.position.set(x,.32,z); sc.add(l); });
+    const back = new T.Mesh(new T.BoxGeometry(10,6,.3), R.mat("#7a5cff")); back.position.set(0,3,-11); sc.add(back);
+    const t = textSprite(`${show.e} ${en ? show.en : show.da}`); t.scale.set(6,1.5,1); t.position.set(0,4.4,-10.7); sc.add(t);
+    const AUD = ["#ff6a55","#ffc22e","#3d9bff","#2fa65a","#ff7eb6","#9b5cff","#ffffff"];
+    for (let z = -8; z <= 5; z += 1.6) [-1,1].forEach(side => [3, 4.3].forEach(dx => {
+      const h = new T.Mesh(new T.BoxGeometry(.55,.55,.55), R.mat(pick(["#f6d5bd","#e0a878","#9c6640","#ffe3c7"]))); h.position.set(side*dx, 1.3 + (dx > 3.5 ? .4 : 0), z); sc.add(h);
+      const bd = new T.Mesh(new T.BoxGeometry(.7,.8,.5), R.mat(pick(AUD))); bd.position.set(side*dx, .65 + (dx > 3.5 ? .4 : 0), z); sc.add(bd); }));
+    return sc;
+  }
+  function startShow(){
+    if (phase !== "room") return; phase = "show"; closePanel();
+    $("#fdone").hidden = true; $("#fhint").hidden = true; document.querySelector(".fhud .timer").hidden = true;
+    R.scene2 = buildRunway();
+    R.cam.position.set(0, 3.4, 10.5); R.cam.lookAt(0, 1.6, -2);
+    const n = 3, lvl = .35 + d*.04;
+    const rivals = shuffle(RIVALS).slice(0, n).map(name => { const Fo = randomOutfit(tags, Math.min(.8, lvl)); return {name, F:Fo, ratio:fashionScore(Fo, tags), votes:[]}; });
+    const me = {name:(S.name || "Dig") + " (dig)", F, ratio:fashionScore(F, tags), votes:[], me:true};
+    R.models = shuffle([...rivals, me]); R.idx = -1; R.me = me;
+    // de andre stemmer på hinanden og på dig
+    for (const m of R.models) for (const v of R.models) if (v !== m && !v.me) m.votes.push(Math.max(1, Math.min(5, Math.round(1 + m.ratio*4 + (Math.random() - .5)*1.4))));
+    nextModel();
+  }
+  function nextModel(){
+    R.idx++;
+    if (R.idx >= R.models.length) return bonusThenResults();
+    const m = R.models[R.idx];
+    if (R.walker) R.scene2.remove(R.walker.g);
+    R.walker = makeModel(m.F); R.walker.g.position.set(0,.3,-9); R.scene2.add(R.walker.g);
+    R.wstate = {m, phase:"in", t:0, pose:m.me ? null : pick(POSES)[0]};
+    const ui = $("#fstageUI");
+    ui.innerHTML = `<div class="fname">${m.me ? "⭐ " : ""}${esc(m.name)}</div>` + (m.me ? `<div class="fposes" id="fposes"><span>Vælg din pose:</span>${POSES.map(([id,n]) => `<button class="btn" data-pose="${id}">${n}</button>`).join("")}</div>` : "");
+    if (m.me) $("#fposes").onclick = e => { const x = e.target.closest("button"); if (!x) return; R.wstate.pose = x.dataset.pose; sfx.pop(); $("#fposes").querySelectorAll("button").forEach(y => y.classList.toggle("main", y === x)); };
+    sfx.win();
+  }
+  function askVote(m){
+    $("#fstageUI").innerHTML = `<div class="fvote"><b>Hvor mange stjerner giver du ${esc(m.name)}?</b><div class="fstars">${[1,2,3,4,5].map(k => `<button data-v="${k}" aria-label="${k} stjerner">★</button>`).join("")}</div>
+      <small>${en ? "Theme" : "Tema"}: ${en ? show.en : show.da}</small></div>`;
+    $("#fstageUI .fstars").onclick = e => { const x = e.target.closest("button"); if (!x) return; m.votes.push(+x.dataset.v); sfx.pop(); nextModel(); };
+  }
+  function bonusThenResults(){
+    $("#fstageUI").innerHTML = "";
+    askQuestion(b, "Bonusspørgsmål fra dommerne!", "Svar rigtigt, så får du en ekstra stjerne i gennemsnit.", () => { R.me.bonus = 1; });
+    const wait = setInterval(() => { if ($("#veil").hidden){ clearInterval(wait); results(); } }, 300); timers.push(wait);
+  }
+  function results(){
+    phase = "done";
+    const avg = m => (m.votes.reduce((a,c) => a+c, 0) / Math.max(1, m.votes.length)) + (m.bonus || 0) + (m.me && R.me.posed ? .2 : 0);
+    const ranked = R.models.map(m => ({m, s:avg(m)})).sort((a,c) => c.s - a.s || (c.m.me ? 1 : -1));
+    const place = ranked.findIndex(x => x.m.me) + 1;
+    setScore(Math.round(avg(R.me) * 20));
+    $("#fstageUI").innerHTML = `<div class="fvote"><b>Resultat</b><div class="podium">${ranked.map((x,i) => `<div class="pod ${x.m.me ? "me" : ""}"><b>${["🥇","🥈","🥉","4."][i]}</b>${esc(x.m.name)}<small>${x.s.toFixed(1)} ★</small></div>`).join("")}</div></div>`;
+    if (place === 1){ confetti(220); sfx.win(); }
+    const stars = place === 1 ? 3 : place === 2 ? 2 : R.me.ratio >= .4 ? 1 : 0;
+    const tip = R.me.ratio < .5 ? " Tip: læs temaet igen, og vælg tøj, farver og pynt der passer." : "";
+    timers.push(setTimeout(() => alive && finish(stars, `Du fik ${avg(R.me).toFixed(1)} stjerner i gennemsnit og blev nr. ${place} af ${ranked.length}.${tip}`), 3000));
+  }
+  function poseAnim(A, pose, t){
+    if (pose === "hofter"){ A.armL.rotation.z = -.9; A.armR.rotation.z = .9; A.armL.rotation.x = A.armR.rotation.x = 0; }
+    if (pose === "vink"){ A.armR.rotation.x = -2.8 + Math.sin(t*10)*.35; A.armL.rotation.x = 0; }
+    if (pose === "sejr"){ A.armL.rotation.x = A.armR.rotation.x = -2.9; A.armL.rotation.z = -.3; A.armR.rotation.z = .3; }
+    if (pose === "drej"){ A.g.rotation.y = t * 5; }
+  }
+  function loop(t){
+    if (!alive) return;
+    const dt = Math.min(.05, R.last ? (t - R.last)/1000 : .016) * (/fmtest/.test(location.search) ? 12 : 1); R.last = t;
+    if (phase === "room"){
+      const A = R.model;
+      if (R.target){
+        const dx = R.target.x - R.pos.x, dz = R.target.z - R.pos.z, dist = Math.hypot(dx, dz);
+        if (dist < .08){ R.target = null; if (R.goal){ openPanel(R.goal); R.goal = null; } }
+        else { const sp = Math.min(dist, 4*dt); R.pos.x += dx/dist*sp; R.pos.z += dz/dist*sp; A.g.rotation.y = Math.atan2(dx, dz); R.walk += dt*10; }
+      } else if (!panelCat) A.g.rotation.y += (0 - A.g.rotation.y) * Math.min(1, dt*3);
+      else { const st = STATIONS.find(s => s[0] === panelCat); A.g.rotation.y = Math.atan2(st[1] - R.pos.x, st[2] - R.pos.z) + Math.PI; }
+      const sw = R.target ? Math.sin(R.walk)*.6 : 0;
+      A.legL.rotation.x = sw; A.legR.rotation.x = -sw; A.armL.rotation.x = -sw; A.armR.rotation.x = sw;
+      A.g.position.copy(R.pos);
+      R.r.render(R.room, R.cam);
+    } else if (R.scene2){
+      const w = R.wstate, A = R.walker;
+      if (w){
+        w.t += dt;
+        if (w.phase === "in"){ A.g.position.z += 3.8*dt; A.g.rotation.y = 0; R.walk += dt*9; const sw = Math.sin(R.walk)*.55; A.legL.rotation.x = sw; A.legR.rotation.x = -sw; A.armL.rotation.x = -sw*.6; A.armR.rotation.x = sw*.6;
+          if (A.g.position.z >= 4){ w.phase = "pose"; w.t = 0; A.legL.rotation.x = A.legR.rotation.x = 0; if (w.m.me && !w.pose) w.pose = "hofter"; if (w.m.me) R.me.posed = true; } }
+        else if (w.phase === "pose"){ poseAnim(A, w.pose, w.t); if (w.t > 2.2){ w.phase = "out"; A.armL.rotation.set(0,0,0); A.armR.rotation.set(0,0,0); } }
+        else if (w.phase === "out"){ A.g.rotation.y = Math.PI; A.g.position.z -= 5.5*dt; R.walk += dt*9; const sw = Math.sin(R.walk)*.55; A.legL.rotation.x = sw; A.legR.rotation.x = -sw;
+          if (A.g.position.z <= -9){ R.wstate = null; if (w.m.me) nextModel(); else askVote(w.m); } }
+      }
+      R.r.render(R.scene2, R.cam);
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  return () => { alive = false; cancelAnimationFrame(raf); offs.forEach(f => f()); timers.forEach(x => { clearInterval(x); clearTimeout(x); }); if (R && R.r){ R.r.dispose(); if (R.r.forceContextLoss) R.r.forceContextLoss(); } };
+}
+
 
 /* ================= OPLÆSNING af spørgsmål og svar ================= */
 function voiceFor(lang){
